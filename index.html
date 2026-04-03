@@ -319,9 +319,54 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.35s;
+      overflow: hidden;
+      --glow-1: 77, 122, 255;
+      --glow-2: 230, 230, 64;
     }
 
+    .modal-backdrop::before,
+    .modal-backdrop::after {
+      content: '';
+      position: absolute;
+      inset: -30%;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0;
+      transition: opacity 0.8s ease;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .modal-backdrop::before {
+      background: radial-gradient(ellipse 70% 60% at 40% 45%, rgba(var(--glow-1), 0.6) 0%, rgba(var(--glow-2), 0.2) 50%, transparent 75%);
+      animation: aurora1 6s ease-in-out infinite alternate;
+    }
+
+    .modal-backdrop::after {
+      background: radial-gradient(ellipse 60% 70% at 60% 55%, rgba(var(--glow-2), 0.55) 0%, rgba(var(--glow-1), 0.15) 50%, transparent 75%);
+      animation: aurora2 7s ease-in-out infinite alternate;
+    }
+
+    .modal-backdrop.active::before,
+    .modal-backdrop.active::after { opacity: 1; }
+
     .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+
+    @keyframes aurora1 {
+      0%   { transform: translate(-30%, -20%) scale(1); }
+      25%  { transform: translate(10%, -30%) scale(1.1); }
+      50%  { transform: translate(30%, 10%) scale(0.9); }
+      75%  { transform: translate(-10%, 30%) scale(1.05); }
+      100% { transform: translate(-30%, -20%) scale(1); }
+    }
+
+    @keyframes aurora2 {
+      0%   { transform: translate(30%, 20%) scale(1.1); }
+      25%  { transform: translate(-20%, 30%) scale(0.95); }
+      50%  { transform: translate(-30%, -10%) scale(1.1); }
+      75%  { transform: translate(20%, -25%) scale(1); }
+      100% { transform: translate(30%, 20%) scale(1.1); }
+    }
 
     /* ── Glass modal ── */
     .modal {
@@ -348,6 +393,13 @@
       opacity: 1;
       pointer-events: auto;
       transform: translate(-50%, -50%) scale(1);
+    }
+
+    .modal-inner {
+      position: relative;
+      z-index: 1;
+      max-height: 80vh;
+      overflow-y: auto;
     }
 
     .modal-header {
@@ -738,13 +790,15 @@
 
   <div class="modal-backdrop" id="modalBackdrop"></div>
   <div class="modal" id="modal">
-    <div class="modal-header">
-      <button class="modal-close" id="modalClose">&times;</button>
-      <div class="modal-num" id="modalNum"></div>
-      <div class="modal-title" id="modalTitle"></div>
-      <div class="modal-intro" id="modalIntro"></div>
+    <div class="modal-inner">
+      <div class="modal-header">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <div class="modal-num" id="modalNum"></div>
+        <div class="modal-title" id="modalTitle"></div>
+        <div class="modal-intro" id="modalIntro"></div>
+      </div>
+      <div class="modal-body" id="modalBody"></div>
     </div>
-    <div class="modal-body" id="modalBody"></div>
   </div>
 
   <script>
@@ -754,12 +808,15 @@
           <div class="rule"><h3>Your design eye is the skill</h3><p>Engineers think in logic. You think in layout, hierarchy, whitespace, rhythm. The AI handles logic. You handle taste.</p></div>
           <div class="rule quote"><blockquote>I just see things, say things, run things, and it mostly works.</blockquote><cite>Andrej Karpathy</cite></div>
           <div class="rule"><h3>Three tools is all you need</h3><p>Claude Code for building, your browser for seeing, Figma for designing the vision.</p></div>` },
-      { num: "02", title: "How to Prompt", intro: "A good prompt is a good design brief. Be specific about the feeling — not the code.",
-        body: `<div class="rule"><h3>Be specific about the feeling</h3><p>Don't say "make me a website." Say "make a minimal portfolio that feels like a magazine editorial."</p></div>
-          <div class="rule do-section"><div class="do-label">Say this</div><ul class="do-yes"><li>"The spacing feels too tight"</li><li>"Like Apple's site but simpler"</li><li>"The hierarchy is off"</li></ul></div>
-          <div class="rule do-section"><div class="do-label">Not this</div><ul class="do-no"><li>"Change the CSS"</li><li>"Add a div with flexbox"</li><li>"Use padding: 24px"</li></ul></div>
-          <div class="rule"><h3>Use references</h3><p>Prompt like a moodboard. "Like Stripe but calmer."</p></div>
-          <div class="rule quote"><blockquote>Design language is the new programming language.</blockquote><cite>The shift</cite></div>` },
+      { num: "02", title: "How to Prompt", intro: "Vibe coding isn't about writing perfect prompts. It's about thinking clearly enough that AI can build with you.",
+        body: `<div class="rule"><h3>1. Start messy, not perfect</h3><p>Don't overthink the first prompt. Say what you want like you're explaining to a teammate:</p><p>"Create a floating UI where elements fall when I scroll and rise when I scroll up. Keep it soft, minimal, pastel."</p><p>Then iterate.</p></div>
+          <div class="rule"><h3>2. Describe behavior, not just visuals</h3><div class="do-section"><div class="do-label">Bad</div><ul class="do-no"><li>"Make it look cool"</li></ul></div><div class="do-section"><div class="do-label">Better</div><ul class="do-yes"><li>"Elements should move slower in the background and faster in the foreground to create depth."</li></ul></div><p>Focus on: movement, interaction, state changes.</p></div>
+          <div class="rule"><h3>3. One idea at a time</h3><p>Don't dump everything in one prompt. Break it down: layout, motion, interaction.</p><p>"Add slight delay so elements don't follow scroll instantly. Make it feel soft."</p></div>
+          <div class="rule"><h3>4. Use references (but loosely)</h3><div class="do-section"><div class="do-label">Instead of</div><ul class="do-no"><li>"Like Apple website"</li></ul></div><div class="do-section"><div class="do-label">Try</div><ul class="do-yes"><li>"Soft motion, slow easing, nothing abrupt"</li></ul></div><p>Extract the feeling, not copy the design.</p></div>
+          <div class="rule"><h3>5. Prompt, see, adjust, repeat</h3><p>This is the loop: prompt, result, tweak, repeat.</p><p>You're not writing instructions. You're shaping behavior through iteration.</p></div>
+          <div class="rule"><h3>6. Say what you don't want</h3><p>Super underrated.</p><p>"Avoid sharp movement. No harsh black. Keep it calm."</p></div>
+          <div class="rule"><h3>7. Ask AI to simplify</h3><p>When things get messy:</p><p>"Simplify this. Reduce complexity but keep the core interaction."</p></div>
+          <div class="rule"><h3>8. Treat AI like a builder, not a tool</h3><div class="do-section"><div class="do-label">Not</div><ul class="do-no"><li>"Generate code"</li></ul></div><div class="do-section"><div class="do-label">But</div><ul class="do-yes"><li>"Help me explore this idea"</li></ul></div></div>` },
       { num: "03", title: "The Workflow", intro: "A tight loop: describe, see, react, refine. 3–5 iterations is normal.",
         body: `<div class="rule"><h3>Describe</h3><p>Write what you want like a design brief. Include the feeling, the audience, and references.</p></div>
           <div class="rule"><h3>Generate</h3><p>The AI writes real, runnable code. See the result immediately.</p></div>
@@ -979,18 +1036,33 @@
     const modal = document.getElementById("modal");
     const modalClose = document.getElementById("modalClose");
 
+    // Two-color neon combos: pure saturated colors
+    const topicAurora = [
+      ['60, 120, 255',  '220, 255, 0'],      // 01: Electric Blue + Neon Yellow
+      ['220, 255, 0',   '0, 255, 200'],       // 02: Neon Yellow + Neon Cyan
+      ['0, 255, 200',   '255, 0, 150'],       // 03: Neon Cyan + Neon Pink
+      ['255, 0, 150',   '255, 140, 0'],       // 04: Neon Pink + Neon Orange
+      ['255, 140, 0',   '60, 120, 255'],      // 05: Neon Orange + Electric Blue
+    ];
+
+    function openModal(idx) {
+      const d = data[idx];
+      document.getElementById("modalNum").textContent = d.num;
+      document.getElementById("modalTitle").textContent = d.title;
+      document.getElementById("modalIntro").textContent = d.intro;
+      document.getElementById("modalBody").innerHTML = d.body;
+      const colors = topicAurora[idx] || topicAurora[0];
+      backdrop.style.setProperty('--glow-1', colors[0]);
+      backdrop.style.setProperty('--glow-2', colors[1]);
+      backdrop.classList.add("active");
+      modal.classList.add("active");
+      modal.querySelector('.modal-inner').scrollTop = 0;
+    }
+
     topicEls.forEach(topic => {
       topic.addEventListener("click", () => {
-        if (didDrag) return; // don't open after dragging
-        const idx = parseInt(topic.dataset.panel);
-        const d = data[idx];
-        document.getElementById("modalNum").textContent = d.num;
-        document.getElementById("modalTitle").textContent = d.title;
-        document.getElementById("modalIntro").textContent = d.intro;
-        document.getElementById("modalBody").innerHTML = d.body;
-        backdrop.classList.add("active");
-        modal.classList.add("active");
-        modal.scrollTop = 0;
+        if (didDrag) return;
+        openModal(parseInt(topic.dataset.panel));
       });
     });
 
@@ -1022,15 +1094,7 @@
     // ── Bento cell clicks ──
     document.querySelectorAll(".bento-cell").forEach(cell => {
       cell.addEventListener("click", () => {
-        const idx = parseInt(cell.dataset.panel);
-        const d = data[idx];
-        document.getElementById("modalNum").textContent = d.num;
-        document.getElementById("modalTitle").textContent = d.title;
-        document.getElementById("modalIntro").textContent = d.intro;
-        document.getElementById("modalBody").innerHTML = d.body;
-        backdrop.classList.add("active");
-        modal.classList.add("active");
-        modal.scrollTop = 0;
+        openModal(parseInt(cell.dataset.panel));
       });
     });
 
