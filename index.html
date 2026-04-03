@@ -1,0 +1,1264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vibe Coding for Designers</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;400;700;900&family=Orbitron:wght@700;900&family=Space+Mono:ital@0;1&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #0d0c0c;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle, #161515 0.5px, transparent 0.5px);
+      background-size: 28px 28px;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      opacity: 0.18;
+      z-index: 9999;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 200px 200px;
+    }
+
+    body.light-mode::before { display: none; }
+    body.light-mode::after { opacity: 0.03; }
+
+    ::selection { background: #fff; color: #000; }
+
+    .canvas { width: 100vw; height: 100vh; position: relative; }
+
+    #particleCanvas {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body.light-mode #particleCanvas { display: none; }
+
+    /* ── Top bar ── */
+    .top-bar {
+      position: absolute;
+      top: 32px; left: 48px; right: 48px;
+      display: flex;
+      justify-content: space-between;
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #555;
+      z-index: 10;
+    }
+
+    .mode-toggle {
+      font-family: 'Space Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #555;
+      background: none;
+      border: 1px solid #333;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .mode-toggle:hover { color: #fff; border-color: #666; }
+
+    /* ── SVG lines ── */
+    svg.lines {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    svg.lines line {
+      stroke: #fff;
+      stroke-width: 1px;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+
+    svg.lines line.visible {
+      opacity: 0.4;
+    }
+
+    svg.lines circle {
+      transition: opacity 0.6s ease;
+    }
+
+    /* ── Center hub (draggable) ── */
+    .hub {
+      position: absolute;
+      top: 48%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      cursor: grab;
+      text-align: center;
+      user-select: none;
+      padding: 16px 32px;
+      background: #0d0c0c;
+    }
+
+    .hub:active { cursor: grabbing; }
+
+    .hub h1 {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(28px, 4vw, 52px);
+      font-weight: 900;
+      line-height: 0.9;
+      letter-spacing: -2px;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+
+    .hub .pills {
+      display: flex;
+      gap: 6px;
+      margin-top: 14px;
+      justify-content: center;
+    }
+
+    .pill {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      padding: 4px 10px;
+      border: 1px solid #333;
+      text-transform: uppercase;
+      background: transparent;
+      color: #555;
+    }
+
+    /* ── Topics ── */
+    .topic {
+      position: absolute;
+      cursor: pointer;
+      z-index: 5;
+      opacity: 0;
+      will-change: transform;
+      transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .topic:hover { z-index: 20; transform: scale(1.06); }
+
+    .topic.entered {
+      animation: topicPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    @keyframes topicPop {
+      0% { opacity: 0; transform: scale(0.5); filter: blur(6px); }
+      60% { opacity: 1; transform: scale(1.06); filter: blur(0); }
+      100% { opacity: 1; transform: scale(1); filter: blur(0); }
+    }
+
+    .topic-num {
+      font-family: 'Space Mono', monospace;
+      font-weight: 700;
+      line-height: 0.85;
+      transition: text-shadow 0.3s, color 0.3s;
+    }
+
+    /* Neon glow per topic — color + shadow */
+    /* 01: Klein Blue */
+    #t1:hover .topic-num { color: #4d7aff !important; text-shadow: 0 0 20px rgba(0, 47, 167, 0.8), 0 0 60px rgba(0, 47, 167, 0.4), 0 0 120px rgba(0, 47, 167, 0.2); }
+    /* 02: Citric */
+    #t2:hover .topic-num { color: #e6e640 !important; text-shadow: 0 0 20px rgba(220, 220, 0, 0.8), 0 0 60px rgba(220, 220, 0, 0.4), 0 0 120px rgba(220, 220, 0, 0.2); }
+    /* 03: Aquamarine */
+    #t3:hover .topic-num { color: #40e6c8 !important; text-shadow: 0 0 20px rgba(0, 210, 180, 0.8), 0 0 60px rgba(0, 210, 180, 0.4), 0 0 120px rgba(0, 210, 180, 0.2); }
+    /* 04: Fuchsia */
+    #t4:hover .topic-num { color: #ff4da6 !important; text-shadow: 0 0 20px rgba(255, 0, 144, 0.8), 0 0 60px rgba(255, 0, 144, 0.4), 0 0 120px rgba(255, 0, 144, 0.2); }
+    /* 05: Tangerine */
+    #t5:hover .topic-num { color: #ffa040 !important; text-shadow: 0 0 20px rgba(255, 140, 0, 0.8), 0 0 60px rgba(255, 140, 0, 0.4), 0 0 120px rgba(255, 140, 0, 0.2); }
+
+    .topic-name {
+      font-size: 14px;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-top: 4px;
+      transition: text-shadow 0.3s;
+    }
+
+    .topic:hover .topic-name {
+      text-shadow: 0 0 12px rgba(255, 255, 255, 0.15);
+    }
+
+    .topic-desc {
+      font-size: 12px;
+      font-weight: 400;
+      line-height: 1.6;
+      color: #aaa;
+      max-width: 180px;
+      margin: 6px auto 0;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .topic:hover .topic-desc {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .topic { text-align: center; }
+    .topic-num { font-size: clamp(44px, 5vw, 72px); }
+
+    /* Positions — all centered on their point */
+    #t1 { top: 6vh; right: 28vw; }
+    #t2 { top: 30vh; right: 4vw; }
+    #t2 .topic-num { color: #444; }
+    #t3 { bottom: 8vh; right: 10vw; }
+    #t4 { bottom: 10vh; left: 10vw; }
+    #t4 .topic-num { color: #333; }
+    #t5 { top: 30vh; left: 4vw; }
+    #t5 .topic-num { color: #2a2a2a; }
+
+    #quoteCard {
+      top: 12vh;
+      left: 22vw;
+    }
+
+    #quoteCard2 {
+      bottom: 14vh;
+      left: 36vw;
+      max-width: 240px;
+    }
+
+    /* ── Quote card (also a node) ── */
+    .quote-card {
+      position: absolute;
+      background: #111;
+      border: 1px solid #222;
+      border-radius: 12px;
+      padding: 16px 20px;
+      max-width: 240px;
+      z-index: 5;
+      opacity: 0;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+    }
+
+
+
+    .quote-card:hover {
+      transform: scale(1.03);
+    }
+
+    .quote-card.entered {
+      animation: topicPop 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .quote-card blockquote {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      font-style: normal;
+      line-height: 1.6;
+      color: #888;
+    }
+
+    .quote-card cite {
+      display: block;
+      margin-top: 8px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      font-style: normal;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #444;
+    }
+
+    .quote-link {
+      display: inline-block;
+      margin-top: 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 1px;
+      color: #888;
+      text-decoration: none;
+      border-bottom: 1px solid #444;
+      padding-bottom: 1px;
+      transition: opacity 0.2s;
+    }
+
+    .quote-link:hover { opacity: 0.6; }
+
+    /* ── Modal backdrop ── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.4);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      z-index: 200;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s;
+    }
+
+    .modal-backdrop.active { opacity: 1; pointer-events: auto; }
+
+    /* ── Glass modal ── */
+    .modal {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%) scale(0.92);
+      width: 540px;
+      max-height: 80vh;
+      background: rgba(20, 20, 20, 0.8);
+      backdrop-filter: blur(40px);
+      -webkit-backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      z-index: 201;
+      color: #fff;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.35s, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+    }
+
+    .modal.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translate(-50%, -50%) scale(1);
+    }
+
+    .modal-header {
+      padding: 32px 32px 24px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      position: relative;
+    }
+
+    .modal-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 2px;
+      color: #555;
+      margin-bottom: 8px;
+    }
+
+    .modal-title {
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -1px;
+      line-height: 1.1;
+    }
+
+    .modal-intro {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: 400;
+      line-height: 1.7;
+      color: #999;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 20px; right: 20px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      width: 32px; height: 32px;
+      font-size: 16px;
+      cursor: pointer;
+      color: #555;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-close:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+    .modal-body {
+      padding: 24px 32px 32px;
+    }
+
+    .modal-body .rule {
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      opacity: 0;
+      transform: translateY(12px);
+      animation: ruleIn 0.4s forwards;
+    }
+
+    .modal-body .rule:last-child { border-bottom: none; margin-bottom: 0; }
+    .modal-body .rule:nth-child(1) { animation-delay: 0.1s; }
+    .modal-body .rule:nth-child(2) { animation-delay: 0.18s; }
+    .modal-body .rule:nth-child(3) { animation-delay: 0.26s; }
+    .modal-body .rule:nth-child(4) { animation-delay: 0.34s; }
+    .modal-body .rule:nth-child(5) { animation-delay: 0.42s; }
+    .modal-body .rule:nth-child(6) { animation-delay: 0.50s; }
+
+    @keyframes ruleIn { to { opacity: 1; transform: translateY(0); } }
+
+    .modal-body h3 { font-size: 15px; font-weight: 900; margin-bottom: 4px; }
+    .modal-body p { font-size: 14px; font-weight: 400; line-height: 1.7; color: #aaa; }
+
+    .modal-body .quote {
+      padding: 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 2px solid rgba(255, 255, 255, 0.25);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .modal-body .quote blockquote { font-size: 14px; font-style: italic; line-height: 1.5; margin-bottom: 6px; color: #ccc; }
+    .modal-body .quote cite { font-family: 'Space Mono', monospace; font-size: 9px; font-style: normal; letter-spacing: 2px; text-transform: uppercase; color: #444; }
+
+    .modal-body .do-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; font-weight: 700; margin-bottom: 8px; color: #555; }
+    .modal-body ul { list-style: none; padding: 0; }
+    .modal-body li { font-size: 14px; font-weight: 400; line-height: 1.8; padding-left: 18px; position: relative; color: #aaa; }
+    .modal-body .do-yes li::before { content: '→'; position: absolute; left: 0; color: #444; }
+    .modal-body .do-no li::before { content: '×'; position: absolute; left: 0; color: #444; }
+
+    /* ── Light Mode Bento ── */
+    .bento-layout {
+      display: none;
+      width: 100vw;
+      height: 100vh;
+      background: #fff;
+      color: #000;
+      overflow: hidden;
+    }
+
+    body.light-mode .canvas { display: none; }
+    body.light-mode .bento-layout { display: flex; flex-direction: column; }
+    body.light-mode { background: #fff; background-image: none; }
+
+    .bento-top-bar {
+      padding: 20px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .pill--light {
+      border-color: #ddd;
+      color: #999;
+      background: transparent;
+    }
+
+    .mode-toggle--light {
+      color: #999;
+      border-color: #ddd;
+    }
+
+    .mode-toggle--light:hover { color: #000; border-color: #999; }
+
+    .bento-grid {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin: 0;
+      min-height: 0;
+    }
+
+    /* Row 1 left: hero */
+    .bento-hero {
+      background: #fff;
+      display: flex;
+      align-items: center;
+      padding: 40px;
+      gap: 32px;
+      overflow: hidden;
+      flex: 3;
+      border-right: 1px solid #e0e0e0;
+    }
+
+    .bento-hero-left {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .bento-title {
+      font-family: 'Orbitron', sans-serif;
+      font-size: clamp(24px, 3vw, 40px);
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+      line-height: 1;
+      margin-bottom: 20px;
+    }
+
+    .bento-quotes {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bento-quote {
+      font-family: 'Space Mono', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: #777;
+    }
+
+    .bento-quote span {
+      color: #bbb;
+    }
+
+    .bento-hero-globe {
+      width: 200px;
+      height: 200px;
+      flex-shrink: 0;
+    }
+
+    .bento-hero-globe canvas {
+      width: 100%;
+      height: 100%;
+    }
+
+    .bento-right-stack {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+    }
+
+    .bento-right-stack .bento-cell {
+      flex: 1;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .bento-right-stack .bento-cell:last-child {
+      border-bottom: none;
+    }
+
+    /* Cells */
+    .bento-cell {
+      background: #fff;
+      padding: 28px 28px;
+      cursor: pointer;
+      transition: background 0.2s;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      flex: 1;
+    }
+
+    .bento-row-2 .bento-cell {
+      border-right: 1px solid #e0e0e0;
+    }
+
+    .bento-row-2 .bento-cell:last-child {
+      border-right: none;
+    }
+
+    .bento-cell:hover { background: #fafafa; }
+
+    .bento-cell-num {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(36px, 4vw, 56px);
+      font-weight: 700;
+      color: #eee;
+      line-height: 1;
+      margin-bottom: auto;
+    }
+
+    .bento-cell:hover .bento-cell-num { color: #ddd; }
+
+    .bento-cell-name {
+      font-size: 16px;
+      font-weight: 900;
+      line-height: 1.2;
+      margin-bottom: 4px;
+    }
+
+    .bento-cell-desc {
+      font-size: 11px;
+      font-weight: 300;
+      color: #999;
+      line-height: 1.5;
+    }
+
+    .bento-row-1 {
+      display: flex;
+      flex: 3;
+      min-height: 0;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .bento-row-2 {
+      display: flex;
+      flex: 2;
+      min-height: 0;
+    }
+
+    /* Light mode modal overrides */
+    body.light-mode .modal-backdrop { background: rgba(255,255,255,0.5); }
+    body.light-mode .modal {
+      background: rgba(255, 255, 255, 0.9);
+      border-color: rgba(0, 0, 0, 0.08);
+      color: #000;
+      box-shadow: 0 24px 80px rgba(0, 0, 0, 0.1);
+    }
+    body.light-mode .modal-num { color: #ccc; }
+    body.light-mode .modal-intro { color: #666; }
+    body.light-mode .modal-close { background: rgba(0,0,0,0.04); border-color: rgba(0,0,0,0.1); color: #999; }
+    body.light-mode .modal-close:hover { color: #000; border-color: #000; }
+    body.light-mode .modal-body .rule { border-bottom-color: #eee; }
+    body.light-mode .modal-body p { color: #666; }
+    body.light-mode .modal-body li { color: #666; }
+    body.light-mode .modal-body .quote { background: #f8f8f8; border-left-color: #000; }
+    body.light-mode .modal-body .quote blockquote { color: #333; }
+    body.light-mode .modal-body .quote cite { color: #bbb; }
+    body.light-mode .modal-body .do-label { color: #999; }
+    body.light-mode .modal-body .do-yes li::before,
+    body.light-mode .modal-body .do-no li::before { color: #ccc; }
+
+    @media (max-width: 640px) {
+      .modal { width: calc(100% - 32px); max-height: 90vh; }
+      .modal-header, .modal-body { padding-left: 20px; padding-right: 20px; }
+      .quote-card { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particleCanvas"></canvas>
+  <div class="canvas" id="canvas">
+
+    <div class="top-bar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="pill">Designers</span>
+        <span class="pill">Non-engineers</span>
+        <span class="pill">Beginners</span>
+      </div>
+      <button class="mode-toggle" id="modeToggle">Light Mode</button>
+    </div>
+
+    <svg class="lines" id="lines" style="width:100%;height:100%;"></svg>
+
+
+    <div class="hub" id="hub">
+      <h1>Vibe Coding</h1>
+    </div>
+
+    <div class="quote-card" id="quoteCard">
+      <blockquote>"I just see things, say things, run things, and it mostly works."</blockquote>
+      <cite>Andrej Karpathy — coined "vibe coding", Feb 2025</cite>
+      <a href="https://x.com/karpathy/status/1886192184808149383" target="_blank" class="quote-link">Read original post &rarr;</a>
+    </div>
+
+    <div class="topic" id="t1" data-panel="0"><div class="topic-num">01</div><div class="topic-name">Getting Started</div><div class="topic-desc">Open the AI, describe what you want, press enter.</div></div>
+    <div class="topic" id="t2" data-panel="1"><div class="topic-num">02</div><div class="topic-name">How to Prompt</div><div class="topic-desc">Describe feelings, not code.</div></div>
+    <div class="topic" id="t3" data-panel="2"><div class="topic-num">03</div><div class="topic-name">The Workflow</div><div class="topic-desc">Describe, generate, react, refine.</div></div>
+    <div class="topic" id="t4" data-panel="3"><div class="topic-num">04</div><div class="topic-name">Lessons the Hard Way</div><div class="topic-desc">Iterate small, push back, start ugly.</div></div>
+    <div class="topic" id="t5" data-panel="4"><div class="topic-num">05</div><div class="topic-name">Your Toolkit</div><div class="topic-desc">Claude Code, Cursor, v0, Bolt, Figma.</div></div>
+
+    <div class="quote-card" id="quoteCard2">
+      <blockquote>"The line between designer and builder is gone. Those who thrive will be the ones who can move fluidly between both worlds."</blockquote>
+      <cite>Stu Green</cite>
+    </div>
+  </div>
+
+  <!-- ── Light Mode Bento ── -->
+  <div class="bento-layout" id="bentoLayout">
+    <div class="bento-top-bar">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="pill pill--light">Designers</span>
+        <span class="pill pill--light">Non-engineers</span>
+        <span class="pill pill--light">Beginners</span>
+      </div>
+      <button class="mode-toggle mode-toggle--light" id="modeToggleLight">Dark Mode</button>
+    </div>
+    <div class="bento-grid">
+      <div class="bento-row-1">
+        <div class="bento-hero">
+          <div class="bento-hero-left">
+            <h1 class="bento-title">Vibe Coding</h1>
+            <div class="bento-quotes">
+              <p class="bento-quote">"I just see things, say things, run things, and it mostly works." <span>— Andrej Karpathy</span></p>
+              <p class="bento-quote">"The line between designer and builder is gone. Those who thrive will be the ones who can move fluidly between both worlds." <span>— Stu Green</span></p>
+            </div>
+          </div>
+          <div class="bento-hero-globe">
+            <canvas id="globe-canvas-light" width="400" height="400"></canvas>
+          </div>
+        </div>
+        <div class="bento-right-stack">
+          <div class="bento-cell" data-panel="0">
+            <div class="bento-cell-num">01</div>
+            <div class="bento-cell-name">Getting Started</div>
+            <div class="bento-cell-desc">Open the AI, describe what you want, press enter.</div>
+          </div>
+          <div class="bento-cell" data-panel="1">
+            <div class="bento-cell-num">02</div>
+            <div class="bento-cell-name">How to Prompt</div>
+            <div class="bento-cell-desc">Describe feelings, not code.</div>
+          </div>
+        </div>
+      </div>
+      <div class="bento-row-2">
+        <div class="bento-cell" data-panel="2">
+          <div class="bento-cell-num">03</div>
+          <div class="bento-cell-name">The Workflow</div>
+          <div class="bento-cell-desc">Describe, generate, react, refine.</div>
+        </div>
+        <div class="bento-cell" data-panel="3">
+          <div class="bento-cell-num">04</div>
+          <div class="bento-cell-name">Lessons the Hard Way</div>
+          <div class="bento-cell-desc">Iterate small, push back, start ugly.</div>
+        </div>
+        <div class="bento-cell" data-panel="4">
+          <div class="bento-cell-num">05</div>
+          <div class="bento-cell-name">Your Toolkit</div>
+          <div class="bento-cell-desc">Claude Code, Cursor, v0, Bolt, Figma.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="modalBackdrop"></div>
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <button class="modal-close" id="modalClose">&times;</button>
+      <div class="modal-num" id="modalNum"></div>
+      <div class="modal-title" id="modalTitle"></div>
+      <div class="modal-intro" id="modalIntro"></div>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+
+  <script>
+    const data = [
+      { num: "01", title: "Getting Started", intro: "You don't need to learn a programming language. Open an AI tool, describe what you want, and press enter.",
+        body: `<div class="rule"><h3>Just start talking</h3><p>Open Claude Code or Cursor. Type: "Build me a landing page with a big headline and a signup form." The AI creates files, writes code, and you see it in your browser.</p></div>
+          <div class="rule"><h3>Your design eye is the skill</h3><p>Engineers think in logic. You think in layout, hierarchy, whitespace, rhythm. The AI handles logic. You handle taste.</p></div>
+          <div class="rule quote"><blockquote>I just see things, say things, run things, and it mostly works.</blockquote><cite>Andrej Karpathy</cite></div>
+          <div class="rule"><h3>Three tools is all you need</h3><p>Claude Code for building, your browser for seeing, Figma for designing the vision.</p></div>` },
+      { num: "02", title: "How to Prompt", intro: "A good prompt is a good design brief. Be specific about the feeling — not the code.",
+        body: `<div class="rule"><h3>Be specific about the feeling</h3><p>Don't say "make me a website." Say "make a minimal portfolio that feels like a magazine editorial."</p></div>
+          <div class="rule do-section"><div class="do-label">Say this</div><ul class="do-yes"><li>"The spacing feels too tight"</li><li>"Like Apple's site but simpler"</li><li>"The hierarchy is off"</li></ul></div>
+          <div class="rule do-section"><div class="do-label">Not this</div><ul class="do-no"><li>"Change the CSS"</li><li>"Add a div with flexbox"</li><li>"Use padding: 24px"</li></ul></div>
+          <div class="rule"><h3>Use references</h3><p>Prompt like a moodboard. "Like Stripe but calmer."</p></div>
+          <div class="rule quote"><blockquote>Design language is the new programming language.</blockquote><cite>The shift</cite></div>` },
+      { num: "03", title: "The Workflow", intro: "A tight loop: describe, see, react, refine. 3–5 iterations is normal.",
+        body: `<div class="rule"><h3>Describe</h3><p>Write what you want like a design brief. Include the feeling, the audience, and references.</p></div>
+          <div class="rule"><h3>Generate</h3><p>The AI writes real, runnable code. See the result immediately.</p></div>
+          <div class="rule"><h3>React</h3><p>Look at it like a design review. What's off? Trust your gut.</p></div>
+          <div class="rule"><h3>Refine</h3><p>"Tighter." "Lighter." "More breathing room." Repeat.</p></div>
+          <div class="rule quote"><blockquote>The feedback loop went from days to seconds.</blockquote><cite>Why this works</cite></div>` },
+      { num: "04", title: "Lessons the Hard Way", intro: "Things I wish someone told me before I started.",
+        body: `<div class="rule"><h3>One thing at a time</h3><p>Don't ask for 10 changes in one prompt. Ask for one. Review. Then the next.</p></div>
+          <div class="rule"><h3>Don't accept the first output</h3><p>The first result is a draft. Push back. That's the gap between good and great.</p></div>
+          <div class="rule"><h3>Start ugly, end beautiful</h3><p>Get structure right first. If it's bad in black and white, color won't save it.</p></div>
+          <div class="rule"><h3>Describe what you see</h3><p>"This feels unbalanced" beats "move that div left 20px."</p></div>
+          <div class="rule quote"><blockquote>Delete it and try again. Generated code is free.</blockquote><cite>The best lesson</cite></div>` },
+      { num: "05", title: "Your Toolkit", intro: "Start with one tool. Add more only when you hit a wall.",
+        body: `<div class="rule"><h3>Claude Code</h3><p>Describe what you want in conversation, it builds the whole thing.</p></div>
+          <div class="rule"><h3>Cursor</h3><p>A code editor with AI built in. See the files, AI edits inline.</p></div>
+          <div class="rule"><h3>v0 by Vercel</h3><p>Type a description, get a component. Fastest way to prototype.</p></div>
+          <div class="rule"><h3>Bolt</h3><p>Full-stack apps from a prompt. When your ambition grows.</p></div>
+          <div class="rule"><h3>Figma + Browser</h3><p>Design in Figma, describe to AI. Inspect helps you give better feedback.</p></div>
+          <div class="rule quote"><blockquote>Start with one tool. Add more only when you hit a wall.</blockquote><cite>Keep it simple</cite></div>` }
+    ];
+
+    // ── Elements ──
+    const hub = document.getElementById("hub");
+    const svg = document.getElementById("lines");
+    const quoteCard = document.getElementById("quoteCard");
+    const topicEls = document.querySelectorAll(".topic");
+    const quoteCard2 = document.getElementById("quoteCard2");
+    const nodes = [...topicEls, quoteCard, quoteCard2]; // 7 nodes total
+
+    // Get element rect ignoring CSS transforms (so scale animations don't cause flicker)
+    function getLayoutRect(el) {
+      const r = el.getBoundingClientRect();
+      const style = getComputedStyle(el);
+      const transform = style.transform;
+      if (!transform || transform === 'none') return r;
+      // Parse scale from matrix(a, b, c, d, tx, ty)
+      const match = transform.match(/matrix\(([^)]+)\)/);
+      if (!match) return r;
+      const vals = match[1].split(',').map(Number);
+      const scaleX = Math.sqrt(vals[0]*vals[0] + vals[1]*vals[1]);
+      const scaleY = Math.sqrt(vals[2]*vals[2] + vals[3]*vals[3]);
+      if (scaleX === 0 || scaleY === 0) return r;
+      const realW = r.width / scaleX;
+      const realH = r.height / scaleY;
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      return {
+        left: cx - realW / 2, top: cy - realH / 2,
+        width: realW, height: realH,
+        right: cx + realW / 2, bottom: cy + realH / 2
+      };
+    }
+
+    function getCenter(el) {
+      const r = getLayoutRect(el);
+      return { x: r.left + r.width / 2, y: r.top + r.height / 2 };
+    }
+
+    // ── Lines + staggered reveal ──
+    const staggerDelay = 350;
+    const startDelay = 800;
+    const lineEls = [];
+
+    // Get point on edge of rect closest to a target point
+    function edgePoint(el, tx, ty) {
+      const r = getLayoutRect(el);
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      const dx = tx - cx;
+      const dy = ty - cy;
+      if (dx === 0 && dy === 0) return { x: cx, y: cy };
+      const hw = r.width / 2;
+      const hh = r.height / 2;
+      // Scale factor to reach edge
+      const sx = hw / Math.abs(dx || 0.001);
+      const sy = hh / Math.abs(dy || 0.001);
+      const s = Math.min(sx, sy);
+      return { x: cx + dx * s, y: cy + dy * s };
+    }
+
+    const dotEls = [];
+
+    function initLines() {
+      nodes.forEach(() => {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        svg.appendChild(line);
+        lineEls.push(line);
+        const dot = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        dot.setAttribute("r", "3");
+        dot.setAttribute("fill", "#fff");
+        dot.setAttribute("opacity", "0");
+        svg.appendChild(dot);
+        dotEls.push(dot);
+      });
+      updateLines();
+    }
+
+    // Extra gap for quote cards so lines don't overlap the card
+    const quoteGap = 18;
+
+    function updateLines() {
+      nodes.forEach((node, i) => {
+        if (!lineEls[i]) return;
+        const nc = getCenter(node);
+        const hc = getCenter(hub);
+        const hp = edgePoint(hub, nc.x, nc.y);
+        const np = edgePoint(node, hc.x, hc.y);
+
+        // Shorten line at quote card end by pulling endpoint back toward hub
+        let endX = np.x, endY = np.y;
+        if (node === quoteCard || node === quoteCard2) {
+          const dx = hc.x - np.x;
+          const dy = hc.y - np.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist > 0) {
+            endX = np.x + (dx / dist) * quoteGap;
+            endY = np.y + (dy / dist) * quoteGap;
+          }
+        }
+
+        lineEls[i].setAttribute("x1", hp.x);
+        lineEls[i].setAttribute("y1", hp.y);
+        lineEls[i].setAttribute("x2", endX);
+        lineEls[i].setAttribute("y2", endY);
+        if (dotEls[i]) {
+          dotEls[i].setAttribute("cx", endX);
+          dotEls[i].setAttribute("cy", endY);
+        }
+      });
+    }
+
+    function reveal() {
+      nodes.forEach((node, i) => {
+        const base = startDelay + i * staggerDelay;
+        // Line appears first
+        setTimeout(() => {
+          updateLines();
+          lineEls[i].classList.add("visible");
+          dotEls[i].setAttribute("opacity", "0.4");
+        }, base);
+        // Then content pops in
+        setTimeout(() => {
+          node.classList.add("entered");
+        }, base + 300);
+      });
+    }
+
+    setTimeout(() => {
+      initLines();
+      reveal();
+    }, 100);
+
+    window.addEventListener("resize", updateLines);
+
+    // ── Make any element draggable ──
+    let dragTarget = null;
+    let dragStartX = 0, dragStartY = 0;
+    let dragOffX = 0, dragOffY = 0;
+    let didDrag = false;
+
+    function makeDraggable(el) {
+      el.addEventListener("mousedown", (e) => {
+        if (e.target.closest("a")) return;
+        e.preventDefault();
+        dragTarget = el;
+        didDrag = false;
+        dragStartX = e.clientX;
+        dragStartY = e.clientY;
+        const r = el.getBoundingClientRect();
+        dragOffX = e.clientX - r.left;
+        dragOffY = e.clientY - r.top;
+      });
+    }
+
+    // Hub
+    makeDraggable(hub);
+    // Topics
+    topicEls.forEach(t => { t.style.cursor = "grab"; makeDraggable(t); });
+    // Quote card
+    quoteCard.style.cursor = "grab";
+    makeDraggable(quoteCard);
+    quoteCard2.style.cursor = "grab";
+    makeDraggable(quoteCard2);
+
+    window.addEventListener("mousemove", (e) => {
+      if (!dragTarget) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      // Only start dragging after 5px threshold
+      if (!didDrag && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
+      if (!didDrag) {
+        didDrag = true;
+        dragTarget.style.transition = "none";
+        dragTarget.style.zIndex = 30;
+      }
+      const x = e.clientX - dragOffX;
+      const y = e.clientY - dragOffY;
+      dragTarget.style.left = x + "px";
+      dragTarget.style.top = y + "px";
+      dragTarget.style.right = "auto";
+      dragTarget.style.bottom = "auto";
+      dragTarget.style.transform = "none";
+      updateLines();
+    });
+
+    window.addEventListener("mouseup", () => {
+      if (dragTarget) {
+        if (didDrag) {
+          dragTarget.style.transition = "";
+        }
+        dragTarget = null;
+      }
+    });
+
+    // ── Click topics → glass modal ──
+    const backdrop = document.getElementById("modalBackdrop");
+    const modal = document.getElementById("modal");
+    const modalClose = document.getElementById("modalClose");
+
+    topicEls.forEach(topic => {
+      topic.addEventListener("click", () => {
+        if (didDrag) return; // don't open after dragging
+        const idx = parseInt(topic.dataset.panel);
+        const d = data[idx];
+        document.getElementById("modalNum").textContent = d.num;
+        document.getElementById("modalTitle").textContent = d.title;
+        document.getElementById("modalIntro").textContent = d.intro;
+        document.getElementById("modalBody").innerHTML = d.body;
+        backdrop.classList.add("active");
+        modal.classList.add("active");
+        modal.scrollTop = 0;
+      });
+    });
+
+    function closeModal() {
+      backdrop.classList.remove("active");
+      modal.classList.remove("active");
+    }
+
+    backdrop.addEventListener("click", closeModal);
+    modalClose.addEventListener("click", closeModal);
+    document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
+
+    // ── Mode toggle ──
+    const modeToggle = document.getElementById("modeToggle");
+    const modeToggleLight = document.getElementById("modeToggleLight");
+    let isDark = true;
+
+    function toggleMode() {
+      isDark = !isDark;
+      document.body.classList.toggle("light-mode", !isDark);
+      modeToggle.textContent = isDark ? "Light Mode" : "Dark Mode";
+      modeToggleLight.textContent = isDark ? "Light Mode" : "Dark Mode";
+      if (!isDark) startLightGlobe();
+    }
+
+    modeToggle.addEventListener("click", toggleMode);
+    modeToggleLight.addEventListener("click", toggleMode);
+
+    // ── Bento cell clicks ──
+    document.querySelectorAll(".bento-cell").forEach(cell => {
+      cell.addEventListener("click", () => {
+        const idx = parseInt(cell.dataset.panel);
+        const d = data[idx];
+        document.getElementById("modalNum").textContent = d.num;
+        document.getElementById("modalTitle").textContent = d.title;
+        document.getElementById("modalIntro").textContent = d.intro;
+        document.getElementById("modalBody").innerHTML = d.body;
+        backdrop.classList.add("active");
+        modal.classList.add("active");
+        modal.scrollTop = 0;
+      });
+    });
+
+    // ── Light mode globe ──
+    let lightGlobeRunning = false;
+    function startLightGlobe() {
+      if (lightGlobeRunning) return;
+      lightGlobeRunning = true;
+      const c = document.getElementById("globe-canvas-light");
+      if (!c) return;
+      const ctx = c.getContext("2d");
+      const W = c.width, H = c.height;
+      const cx = W/2, cy = H/2, R = 180;
+      let angle = 0;
+
+      function draw() {
+        if (isDark) { lightGlobeRunning = false; return; }
+        ctx.clearRect(0, 0, W, H);
+        ctx.strokeStyle = "#000";
+        ctx.lineWidth = 1.5;
+        ctx.beginPath(); ctx.arc(cx, cy, R, 0, Math.PI*2); ctx.stroke();
+        for (let lat = -60; lat <= 60; lat += 30) {
+          const lr = (lat*Math.PI)/180;
+          const y = cy - Math.sin(lr)*R;
+          const rr = Math.cos(lr)*R;
+          ctx.beginPath(); ctx.ellipse(cx, y, rr, rr*0.15, 0, 0, Math.PI*2);
+          ctx.strokeStyle = lat===0 ? "rgba(0,0,0,0.5)" : "rgba(0,0,0,0.2)";
+          ctx.lineWidth = lat===0 ? 1.2 : 0.8;
+          ctx.stroke();
+        }
+        for (let i = 0; i < 8; i++) {
+          const lng = (i*45+angle)*(Math.PI/180);
+          const xo = Math.sin(lng);
+          const sq = Math.abs(Math.cos(lng));
+          ctx.beginPath();
+          for (let t = -90; t <= 90; t += 2) {
+            const tr = (t*Math.PI)/180;
+            const px = cx + Math.cos(tr)*R*xo;
+            const py = cy - Math.sin(tr)*R;
+            t===-90 ? ctx.moveTo(px,py) : ctx.lineTo(px,py);
+          }
+          ctx.strokeStyle = `rgba(0,0,0,${0.15+sq*0.4})`;
+          ctx.lineWidth = 0.6+sq*0.8;
+          ctx.stroke();
+        }
+        angle += 0.15;
+        requestAnimationFrame(draw);
+      }
+      draw();
+    }
+
+    // ── Particle Constellation ──
+    (function() {
+      const pc = document.getElementById("particleCanvas");
+      const ctx = pc.getContext("2d");
+      let W, H;
+      let mouseX = -1000, mouseY = -1000;
+      const PARTICLE_COUNT = 140;
+      const CONNECT_DIST = 150;
+      const GRAVITY_RADIUS = 200;
+      const particles = [];
+      const ripples = [];
+
+      function resize() {
+        W = pc.width = window.innerWidth;
+        H = pc.height = window.innerHeight;
+      }
+
+      resize();
+      window.addEventListener("resize", resize);
+
+      window.addEventListener("mousemove", (e) => {
+        mouseX = e.clientX;
+        mouseY = e.clientY;
+      });
+
+      // Click → ripple
+      window.addEventListener("click", (e) => {
+        ripples.push({ x: e.clientX, y: e.clientY, r: 0, maxR: 350, alpha: 0.5 });
+      });
+
+      class Particle {
+        constructor() {
+          this.x = Math.random() * W;
+          this.y = Math.random() * H;
+          this.vx = (Math.random() - 0.5) * 0.3;
+          this.vy = (Math.random() - 0.5) * 0.3;
+          this.r = Math.random() * 1.5 + 0.5;
+          this.baseAlpha = Math.random() * 0.25 + 0.08;
+        }
+
+        update() {
+          this.x += this.vx;
+          this.y += this.vy;
+
+          if (this.x < 0) this.x = W;
+          if (this.x > W) this.x = 0;
+          if (this.y < 0) this.y = H;
+          if (this.y > H) this.y = 0;
+
+          // Gravity attraction toward mouse
+          const dx = mouseX - this.x;
+          const dy = mouseY - this.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < GRAVITY_RADIUS && dist > 30) {
+            const force = (GRAVITY_RADIUS - dist) / GRAVITY_RADIUS;
+            const strength = force * 0.15;
+            this.vx += (dx / dist) * strength;
+            this.vy += (dy / dist) * strength;
+          }
+          // Soft repel when too close (prevents clumping)
+          if (dist < 30 && dist > 0) {
+            this.vx -= (dx / dist) * 0.3;
+            this.vy -= (dy / dist) * 0.3;
+          }
+
+          // Ripple shockwave push
+          ripples.forEach(rp => {
+            const rdx = this.x - rp.x;
+            const rdy = this.y - rp.y;
+            const rdist = Math.sqrt(rdx * rdx + rdy * rdy);
+            // Push particles that are near the ripple ring edge
+            if (Math.abs(rdist - rp.r) < 40 && rdist > 0) {
+              const push = (1 - Math.abs(rdist - rp.r) / 40) * rp.alpha * 3;
+              this.vx += (rdx / rdist) * push;
+              this.vy += (rdy / rdist) * push;
+            }
+          });
+
+          // Damping
+          this.vx *= 0.97;
+          this.vy *= 0.97;
+        }
+
+        draw() {
+          const dx = this.x - mouseX;
+          const dy = this.y - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          // Brighter near mouse
+          const proximity = dist < GRAVITY_RADIUS ? (1 - dist / GRAVITY_RADIUS) : 0;
+          const alpha = this.baseAlpha + proximity * 0.5;
+          const size = this.r + proximity * 1.5;
+
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+          ctx.fill();
+        }
+      }
+
+      for (let i = 0; i < PARTICLE_COUNT; i++) {
+        particles.push(new Particle());
+      }
+
+      function drawConnections() {
+        for (let i = 0; i < particles.length; i++) {
+          for (let j = i + 1; j < particles.length; j++) {
+            const dx = particles[i].x - particles[j].x;
+            const dy = particles[i].y - particles[j].y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist < CONNECT_DIST) {
+              const midX = (particles[i].x + particles[j].x) / 2;
+              const midY = (particles[i].y + particles[j].y) / 2;
+              const mouseDist = Math.sqrt((midX - mouseX) ** 2 + (midY - mouseY) ** 2);
+              const mouseBoost = mouseDist < GRAVITY_RADIUS * 1.5 ? (1 - mouseDist / (GRAVITY_RADIUS * 1.5)) * 0.2 : 0;
+
+              const alpha = (1 - dist / CONNECT_DIST) * 0.06 + mouseBoost;
+              ctx.beginPath();
+              ctx.moveTo(particles[i].x, particles[i].y);
+              ctx.lineTo(particles[j].x, particles[j].y);
+              ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+              ctx.lineWidth = 0.5;
+              ctx.stroke();
+            }
+          }
+        }
+
+        // Draw lines from mouse to nearby particles (cursor as node)
+        particles.forEach(p => {
+          const dx = p.x - mouseX;
+          const dy = p.y - mouseY;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < 120) {
+            const alpha = (1 - dist / 120) * 0.15;
+            ctx.beginPath();
+            ctx.moveTo(mouseX, mouseY);
+            ctx.lineTo(p.x, p.y);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${alpha})`;
+            ctx.lineWidth = 0.4;
+            ctx.stroke();
+          }
+        });
+      }
+
+      function drawRipples() {
+        for (let i = ripples.length - 1; i >= 0; i--) {
+          const rp = ripples[i];
+          rp.r += 5;
+          rp.alpha *= 0.96;
+
+          ctx.beginPath();
+          ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255, 255, 255, ${rp.alpha})`;
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          if (rp.alpha < 0.005 || rp.r > rp.maxR) {
+            ripples.splice(i, 1);
+          }
+        }
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, W, H);
+
+        particles.forEach(p => {
+          p.update();
+          p.draw();
+        });
+
+        drawConnections();
+        drawRipples();
+        requestAnimationFrame(animate);
+      }
+
+      animate();
+    })();
+  </script>
+</body>
+</html>
