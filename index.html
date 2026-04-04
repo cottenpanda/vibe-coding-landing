@@ -75,21 +75,58 @@
       z-index: 10;
     }
 
-    .mode-toggle {
-      font-family: 'Space Mono', monospace;
-      font-size: 10px;
-      letter-spacing: 2px;
-      text-transform: uppercase;
-      color: #555;
-      background: none;
+    .mode-switch {
+      position: fixed;
+      top: 32px;
+      right: 48px;
+      z-index: 100;
+      width: 52px;
+      height: 28px;
+      border-radius: 14px;
       border: 1px solid #333;
-      padding: 6px 14px;
-      border-radius: 20px;
+      background: rgba(255, 255, 255, 0.05);
       cursor: pointer;
-      transition: all 0.2s;
+      transition: border-color 0.3s, background 0.3s;
     }
 
-    .mode-toggle:hover { color: #fff; border-color: #666; }
+    .mode-switch:hover { border-color: #666; }
+
+    body.light-mode .mode-switch {
+      border-color: #ddd;
+      background: rgba(0, 0, 0, 0.04);
+    }
+
+    body.light-mode .mode-switch:hover { border-color: #999; }
+
+    .switch-knob {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s;
+    }
+
+    body.light-mode .switch-knob {
+      left: 27px;
+      background: #000;
+    }
+
+    .knob-sun, .knob-moon {
+      position: absolute;
+      transition: opacity 0.3s, transform 0.3s;
+    }
+
+    .knob-sun { color: #333; opacity: 0; transform: rotate(-90deg); }
+    .knob-moon { color: #333; opacity: 1; transform: rotate(0deg); }
+
+    body.light-mode .knob-sun { color: #fff; opacity: 1; transform: rotate(0deg); }
+    body.light-mode .knob-moon { color: #fff; opacity: 0; transform: rotate(90deg); }
 
     /* ── SVG lines ── */
     svg.lines {
@@ -620,12 +657,6 @@
       background: transparent;
     }
 
-    .mode-toggle--light {
-      color: #999;
-      border-color: #ddd;
-    }
-
-    .mode-toggle--light:hover { color: #000; border-color: #999; }
 
     .bento-grid {
       flex: 1;
@@ -830,6 +861,22 @@
   </style>
 </head>
 <body>
+  <div class="mode-switch" id="modeToggleFixed">
+    <div class="switch-knob">
+      <svg viewBox="0 0 24 24" width="12" height="12" class="knob-sun">
+        <circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="2.5"/>
+        <g stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+          <line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+        </g>
+      </svg>
+      <svg viewBox="0 0 24 24" width="12" height="12" class="knob-moon">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </div>
   <canvas id="splashCursor"></canvas>
   <canvas id="particleCanvas"></canvas>
   <div class="canvas" id="canvas">
@@ -839,7 +886,6 @@
         <span class="pill">For anyone with an idea</span>
         <span class="pill">No coding experience needed</span>
       </div>
-      <button class="mode-toggle" id="modeToggle">Light Mode</button>
     </div>
 
     <svg class="lines" id="lines" style="width:100%;height:100%;"></svg>
@@ -874,7 +920,6 @@
         <span class="pill pill--light">For anyone with an idea</span>
         <span class="pill pill--light">No coding experience needed</span>
       </div>
-      <button class="mode-toggle mode-toggle--light" id="modeToggleLight">Dark Mode</button>
     </div>
     <div class="bento-grid">
       <div class="bento-row-1">
@@ -1228,21 +1273,17 @@
     document.addEventListener("keydown", e => { if (e.key === "Escape") closeModal(); });
 
     // ── Mode toggle ──
-    const modeToggle = document.getElementById("modeToggle");
-    const modeToggleLight = document.getElementById("modeToggleLight");
+    const modeToggle = document.getElementById("modeToggleFixed");
     let isDark = true;
 
 
     function toggleMode() {
       isDark = !isDark;
       document.body.classList.toggle("light-mode", !isDark);
-      modeToggle.textContent = isDark ? "Light Mode" : "Dark Mode";
-      modeToggleLight.textContent = isDark ? "Light Mode" : "Dark Mode";
       if (!isDark) { startLightGlobe(); startBentoAnims(); triggerBentoStagger(); }
     }
 
     modeToggle.addEventListener("click", toggleMode);
-    modeToggleLight.addEventListener("click", toggleMode);
 
     // ── Bento cell clicks ──
     document.querySelectorAll(".bento-cell").forEach(cell => {
