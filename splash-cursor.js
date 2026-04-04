@@ -371,7 +371,20 @@ function initSplashCursor(canvas) {
   function updatePointerUpData(pointer){pointer.down=false;}
   function correctDeltaX(delta){let ar=canvas.width/canvas.height;if(ar<1)delta*=ar;return delta;}
   function correctDeltaY(delta){let ar=canvas.width/canvas.height;if(ar>1)delta/=ar;return delta;}
-  function generateColor(){let c=HSVtoRGB(Math.random(),1,1);c.r*=0.15;c.g*=0.15;c.b*=0.15;return c;}
+  // Neon palette matching topic hover colors
+  const neonColors = [
+    { r: 0.30, g: 0.48, b: 1.00 },  // Klein Blue #4d7aff
+    { r: 0.90, g: 0.90, b: 0.25 },  // Citric #e6e640
+    { r: 0.25, g: 0.90, b: 0.78 },  // Aquamarine #40e6c8
+    { r: 1.00, g: 0.30, b: 0.65 },  // Fuchsia #ff4da6
+    { r: 1.00, g: 0.63, b: 0.25 },  // Tangerine #ffa040
+  ];
+  let colorIdx = 0;
+  function generateColor(){
+    const c = neonColors[colorIdx % neonColors.length];
+    colorIdx++;
+    return { r: c.r * 0.15, g: c.g * 0.15, b: c.b * 0.15 };
+  }
 
   function HSVtoRGB(h,s,v){let r,g,b,i,f,p,q,t;i=Math.floor(h*6);f=h*6-i;p=v*(1-s);q=v*(1-f*s);t=v*(1-(1-f)*s);switch(i%6){case 0:r=v;g=t;b=p;break;case 1:r=q;g=v;b=p;break;case 2:r=p;g=v;b=t;break;case 3:r=p;g=q;b=v;break;case 4:r=t;g=p;b=v;break;case 5:r=v;g=p;b=q;break;}return{r,g,b};}
   function wrap(value,min,max){const range=max-min;if(range===0)return min;return((value-min)%range)+min;}
