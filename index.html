@@ -147,6 +147,11 @@
       justify-content: center;
     }
 
+    @keyframes pillDrop {
+      0% { opacity: 0; transform: translateY(-10px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
     .pill {
       font-family: 'Space Mono', monospace;
       font-size: 9px;
@@ -156,7 +161,12 @@
       text-transform: uppercase;
       background: transparent;
       color: #555;
+      opacity: 0;
+      animation: pillDrop 0.4s ease forwards;
     }
+
+    .pill:nth-child(1) { animation-delay: 3.4s; }
+    .pill:nth-child(2) { animation-delay: 3.6s; }
 
     /* ── Topics ── */
     .topic {
@@ -243,12 +253,12 @@
 
     #quoteCard {
       top: 12vh;
-      left: 22vw;
+      left: 28vw;
     }
 
     #quoteCard2 {
       bottom: 14vh;
-      left: 36vw;
+      left: 42vw;
       max-width: 240px;
     }
 
@@ -826,9 +836,8 @@
 
     <div class="top-bar">
       <div style="display:flex;align-items:center;gap:12px;">
-        <span class="pill">Designers</span>
-        <span class="pill">Non-engineers</span>
-        <span class="pill">Beginners</span>
+        <span class="pill">For anyone with an idea</span>
+        <span class="pill">No coding experience needed</span>
       </div>
       <button class="mode-toggle" id="modeToggle">Light Mode</button>
     </div>
@@ -862,9 +871,8 @@
   <div class="bento-layout" id="bentoLayout">
     <div class="bento-top-bar">
       <div style="display:flex;align-items:center;gap:12px;">
-        <span class="pill pill--light">Designers</span>
-        <span class="pill pill--light">Non-engineers</span>
-        <span class="pill pill--light">Beginners</span>
+        <span class="pill pill--light">For anyone with an idea</span>
+        <span class="pill pill--light">No coding experience needed</span>
       </div>
       <button class="mode-toggle mode-toggle--light" id="modeToggleLight">Dark Mode</button>
     </div>
