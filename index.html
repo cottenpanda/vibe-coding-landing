@@ -853,10 +853,91 @@
     body.light-mode .modal-body .do-yes li::before,
     body.light-mode .modal-body .do-no li::before { color: #ccc; }
 
+    /* ── Tablet (<=1024px) ── */
+    @media (max-width: 1024px) {
+      /* Dark mode */
+      .top-bar { left: 24px; right: 24px; top: 20px; }
+      .hub h1 { font-size: clamp(24px, 5vw, 40px); }
+      #t1 { top: 8vh; right: 20vw; }
+      #t2 { top: 28vh; right: 2vw; }
+      #t3 { bottom: 6vh; right: 6vw; }
+      #t4 { bottom: 8vh; left: 6vw; }
+      #t5 { top: 28vh; left: 2vw; }
+      .topic-num { font-size: clamp(32px, 4vw, 52px); }
+      .topic-desc { max-width: 140px; }
+      #quoteCard { left: 20vw; }
+      #quoteCard2 { left: 30vw; }
+
+      /* Light mode */
+      .bento-row-1 { flex-direction: column; }
+      .bento-hero { border-right: none; border-bottom: 1px solid #e0e0e0; }
+      .bento-hero-quotes { border-bottom: 1px solid #e0e0e0; }
+      .bento-row-2 { flex-wrap: wrap; }
+      .bento-row-2 .bento-cell { flex: 1 1 30%; min-width: 200px; }
+      .bento-hero-globe { width: 140px; height: 140px; }
+
+      /* Modal */
+      .modal { width: calc(100% - 48px); }
+      .mode-switch { right: 24px; top: 20px; }
+    }
+
+    /* ── Mobile (<=640px) ── */
     @media (max-width: 640px) {
-      .modal { width: calc(100% - 32px); max-height: 90vh; }
-      .modal-header, .modal-body { padding-left: 20px; padding-right: 20px; }
-      .quote-card { display: none; }
+      /* Dark mode */
+      .top-bar { left: 16px; right: 16px; top: 16px; flex-wrap: wrap; gap: 8px; }
+      .hub { padding: 12px 20px; }
+      .hub h1 { font-size: 24px; }
+      .topic-num { font-size: 36px; }
+      .topic-name { font-size: 12px; }
+      .topic-desc { display: none; }
+      #t1 { top: 12vh; right: 10vw; }
+      #t2 { top: 30vh; right: 2vw; }
+      #t3 { bottom: 12vh; right: 4vw; }
+      #t4 { bottom: 14vh; left: 4vw; }
+      #t5 { top: 30vh; left: 2vw; }
+      .quote-card { max-width: 55vw; }
+      .quote-card blockquote { font-size: 9px; }
+      .quote-card cite { font-size: 8px; }
+      .quote-link { font-size: 8px; }
+      #quoteCard { top: auto; left: 20vw; bottom: 18vh; }
+      #quoteCard2 { top: 10vh; left: 4vw; bottom: auto; }
+      #t1 { top: 6vh; right: 8vw; }
+      #t2 { top: 22vh; right: 2vw; }
+      #t3 { bottom: 14vh; right: 4vw; }
+      #t4 { bottom: 12vh; left: 2vw; }
+      #t5 { top: 30vh; left: 2vw; }
+      .pill { font-size: 8px; padding: 3px 8px; }
+
+      /* Light mode */
+      .bento-top-bar { padding: 16px; }
+      .bento-hero { padding: 24px; }
+      .bento-title { font-size: 28px; }
+      .bento-hero-quotes { padding: 24px; flex-direction: column; gap: 16px; }
+      .bento-hero-globe { width: 120px; height: 120px; }
+      .bento-quote { font-size: 11px; }
+      .bento-layout { overflow-y: auto; }
+      .bento-grid { flex: none; height: auto; }
+      .bento-row-1 { flex: none; flex-direction: column; }
+      .bento-hero { min-height: 200px; }
+      .bento-hero-quotes { border-bottom: 1px solid #e0e0e0; }
+      .bento-row-2 { flex: none; flex-direction: column; }
+      .bento-row-2 .bento-cell { border-right: none; border-bottom: 1px solid #e0e0e0; flex: 1; min-width: auto; padding: 20px; flex-direction: row; align-items: center; gap: 16px; }
+      .bento-row-2 .bento-cell:last-child { border-bottom: none; }
+      .bento-cell-num { font-size: 28px; flex: none; margin-bottom: 0; }
+      .bento-cell-name { margin-top: 0; font-size: 14px; }
+      .bento-cell-desc { min-height: auto; max-width: none; }
+
+      /* Modal */
+      .modal { width: calc(100% - 24px); max-height: 90vh; border-radius: 14px; }
+      .modal-header { padding: 24px 20px 16px; }
+      .modal-title { font-size: 22px; }
+      .modal-body { padding: 16px 20px 24px; }
+      .modal-body table { font-size: 11px; }
+      .modal-body td, .modal-body th { padding: 6px 6px; }
+      .modal-close { top: 14px; right: 14px; width: 28px; height: 28px; font-size: 14px; }
+
+      /* Toggle */
+      .mode-switch { right: 16px; top: 16px; }
     }
   </style>
 </head>
@@ -1174,18 +1255,27 @@
     let dragOffX = 0, dragOffY = 0;
     let didDrag = false;
 
+    function startDrag(el, cx, cy) {
+      dragTarget = el;
+      didDrag = false;
+      dragStartX = cx;
+      dragStartY = cy;
+      const r = el.getBoundingClientRect();
+      dragOffX = cx - r.left;
+      dragOffY = cy - r.top;
+    }
+
     function makeDraggable(el) {
       el.addEventListener("mousedown", (e) => {
         if (e.target.closest("a")) return;
         e.preventDefault();
-        dragTarget = el;
-        didDrag = false;
-        dragStartX = e.clientX;
-        dragStartY = e.clientY;
-        const r = el.getBoundingClientRect();
-        dragOffX = e.clientX - r.left;
-        dragOffY = e.clientY - r.top;
+        startDrag(el, e.clientX, e.clientY);
       });
+      el.addEventListener("touchstart", (e) => {
+        if (e.target.closest("a")) return;
+        const t = e.touches[0];
+        startDrag(el, t.clientX, t.clientY);
+      }, { passive: true });
     }
 
     // Hub
@@ -1198,35 +1288,40 @@
     quoteCard2.style.cursor = "grab";
     makeDraggable(quoteCard2);
 
-    window.addEventListener("mousemove", (e) => {
+    window.addEventListener("mousemove", (e) => { moveDrag(e.clientX, e.clientY); });
+
+    function moveDrag(cx, cy) {
       if (!dragTarget) return;
-      const dx = e.clientX - dragStartX;
-      const dy = e.clientY - dragStartY;
-      // Only start dragging after 5px threshold
+      const dx = cx - dragStartX;
+      const dy = cy - dragStartY;
       if (!didDrag && Math.abs(dx) < 5 && Math.abs(dy) < 5) return;
       if (!didDrag) {
         didDrag = true;
         dragTarget.style.transition = "none";
         dragTarget.style.zIndex = 30;
       }
-      const x = e.clientX - dragOffX;
-      const y = e.clientY - dragOffY;
-      dragTarget.style.left = x + "px";
-      dragTarget.style.top = y + "px";
+      dragTarget.style.left = (cx - dragOffX) + "px";
+      dragTarget.style.top = (cy - dragOffY) + "px";
       dragTarget.style.right = "auto";
       dragTarget.style.bottom = "auto";
       dragTarget.style.transform = "none";
       updateLines();
-    });
+    }
 
-    window.addEventListener("mouseup", () => {
+    function endDrag() {
       if (dragTarget) {
-        if (didDrag) {
-          dragTarget.style.transition = "";
-        }
+        if (didDrag) dragTarget.style.transition = "";
         dragTarget = null;
       }
-    });
+    }
+
+    window.addEventListener("mouseup", endDrag);
+    window.addEventListener("touchend", endDrag);
+    window.addEventListener("touchmove", (e) => {
+      if (!dragTarget) return;
+      e.preventDefault();
+      moveDrag(e.touches[0].clientX, e.touches[0].clientY);
+    }, { passive: false });
 
     // ── Click topics → glass modal ──
     const backdrop = document.getElementById("modalBackdrop");
@@ -1787,7 +1882,7 @@
       const len = quote.length;
       let rafId = null;
 
-      triggerEl.addEventListener('mouseenter', () => {
+      function play() {
         if (rafId) cancelAnimationFrame(rafId);
         // Instantly show code
         textNode.textContent = quote.split('').map(c =>
@@ -1812,8 +1907,10 @@
           else { textNode.textContent = quote; rafId = null; }
         }
         rafId = requestAnimationFrame(step);
-      });
+      }
 
+      triggerEl.addEventListener('mouseenter', play);
+      triggerEl.addEventListener('touchstart', play, { passive: true });
       triggerEl.addEventListener('mouseleave', () => {
         if (rafId) cancelAnimationFrame(rafId);
         rafId = null;
@@ -1824,13 +1921,16 @@
     // Light mode bento quotes
     document.querySelectorAll('.bento-quote').forEach(el => {
       const textNode = el.childNodes[0];
-      if (textNode && textNode.nodeType === 3) setupQuoteToCode(textNode, el);
+      if (textNode) setupQuoteToCode(textNode, el);
     });
 
     // Dark mode quote cards
     document.querySelectorAll('.quote-card blockquote').forEach(el => {
       setupQuoteToCode(el, el.parentElement);
     });
+
+    // All pills/tags
+    document.querySelectorAll('.pill').forEach(el => setupQuoteToCode(el, el));
   </script>
 
   <script src="splash-cursor.js"></script>
