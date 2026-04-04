@@ -48,7 +48,7 @@
 
     ::selection { background: #fff; color: #000; }
 
-    .canvas { width: 100vw; height: 100vh; position: relative; }
+    .canvas { width: 100vw; height: 100vh; position: relative; opacity: 1; visibility: visible; transition: opacity 0.5s ease; }
 
     #particleCanvas {
       position: fixed;
@@ -493,18 +493,50 @@
     .modal-body .do-yes li::before { content: '→'; position: absolute; left: 0; color: #444; }
     .modal-body .do-no li::before { content: '×'; position: absolute; left: 0; color: #444; }
 
+    /* ── Mode transition: dissolve ── */
+
+    /* ── Splash cursor (dark mode) ── */
+    #splashCursor {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw; height: 100vh;
+      z-index: 9;
+      pointer-events: none;
+      display: block;
+    }
+
+    body.light-mode #splashCursor { display: none; }
+
+    /* ── Cursor: crosshair (light mode) ── */
+    body.light-mode, body.light-mode * {
+      cursor: crosshair !important;
+    }
+
+    body.light-mode .mode-toggle--light,
+    body.light-mode .bento-cell,
+    body.light-mode .modal-close {
+      cursor: crosshair !important;
+    }
+
     /* ── Light Mode Bento ── */
     .bento-layout {
-      display: none;
+      display: flex;
+      flex-direction: column;
       width: 100vw;
       height: 100vh;
       background: #fff;
       color: #000;
       overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      position: absolute;
+      top: 0; left: 0;
+      transition: opacity 0.5s ease;
     }
 
-    body.light-mode .canvas { display: none; }
-    body.light-mode .bento-layout { display: flex; flex-direction: column; }
+    body.light-mode .canvas { opacity: 0; visibility: hidden; pointer-events: none; position: absolute; }
+    body.light-mode .bento-layout { opacity: 1; visibility: visible; pointer-events: auto; position: relative; }
     body.light-mode { background: #fff; background-image: none; }
 
     .bento-top-bar {
@@ -726,6 +758,7 @@
   </style>
 </head>
 <body>
+  <canvas id="splashCursor"></canvas>
   <canvas id="particleCanvas"></canvas>
   <div class="canvas" id="canvas">
 
@@ -1113,13 +1146,13 @@
     const modeToggleLight = document.getElementById("modeToggleLight");
     let isDark = true;
 
+
     function toggleMode() {
       isDark = !isDark;
       document.body.classList.toggle("light-mode", !isDark);
       modeToggle.textContent = isDark ? "Light Mode" : "Dark Mode";
       modeToggleLight.textContent = isDark ? "Light Mode" : "Dark Mode";
       if (!isDark) { startLightGlobe(); startBentoAnims(); }
-      // Pixel blast listens via MutationObserver in its own module script
     }
 
     modeToggle.addEventListener("click", toggleMode);
@@ -1582,6 +1615,13 @@
     document.querySelectorAll('.quote-card blockquote').forEach(el => {
       setupQuoteToCode(el, el.parentElement);
     });
+  </script>
+
+  <script src="splash-cursor.js"></script>
+  <script>
+    // Init splash cursor for dark mode
+    const splashCanvas = document.getElementById('splashCursor');
+    if (splashCanvas) initSplashCursor(splashCanvas);
   </script>
 
   <script type="module">
