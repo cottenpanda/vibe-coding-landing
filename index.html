@@ -600,7 +600,7 @@
     .bento-quotes {
       display: flex;
       flex-direction: column;
-      gap: 16px;
+      gap: 24px;
     }
 
     .bento-quote {
@@ -608,6 +608,12 @@
       font-size: 12px;
       line-height: 1.6;
       color: #777;
+      cursor: default;
+      transition: color 0.2s;
+    }
+
+    .bento-quote:hover {
+      color: #444;
     }
 
     .bento-quote span {
@@ -617,12 +623,11 @@
     /* Cells */
     .bento-cell {
       background: #fff;
-      padding: 28px 28px;
+      padding: 28px 28px 40px;
       cursor: pointer;
       transition: background 0.2s;
       display: flex;
       flex-direction: column;
-      justify-content: flex-end;
       flex: 1;
       border-right: 1px solid #e0e0e0;
     }
@@ -633,29 +638,29 @@
 
     .bento-cell:hover { background: #fafafa; }
 
+    /* Bento cell hover background colors */
+    .bento-cell[data-panel="0"]:hover { background: rgba(77, 122, 255, 0.08); }
+    .bento-cell[data-panel="1"]:hover { background: rgba(200, 200, 0, 0.08); }
+    .bento-cell[data-panel="2"]:hover { background: rgba(43, 200, 168, 0.08); }
+    .bento-cell[data-panel="3"]:hover { background: rgba(230, 64, 138, 0.08); }
+    .bento-cell[data-panel="4"]:hover { background: rgba(230, 138, 43, 0.08); }
+    .bento-cell:hover .bento-cell-num { color: #bbb; }
+
     .bento-cell-num {
       font-family: 'Space Mono', monospace;
       font-size: clamp(36px, 4vw, 56px);
       font-weight: 700;
       color: #eee;
       line-height: 1;
-      margin-bottom: auto;
+      flex: 1;
     }
-
-    .bento-cell:hover .bento-cell-num { color: #ddd; }
-
-    /* Bento cell hover colors — matching dark mode neon tones */
-    .bento-cell[data-panel="0"]:hover .bento-cell-num { color: #4d7aff; }
-    .bento-cell[data-panel="1"]:hover .bento-cell-num { color: #c8c800; }
-    .bento-cell[data-panel="2"]:hover .bento-cell-num { color: #2bc8a8; }
-    .bento-cell[data-panel="3"]:hover .bento-cell-num { color: #e6408a; }
-    .bento-cell[data-panel="4"]:hover .bento-cell-num { color: #e68a2b; }
 
     .bento-cell-name {
       font-size: 16px;
       font-weight: 900;
       line-height: 1.2;
       margin-bottom: 4px;
+      margin-top: auto;
     }
 
     .bento-cell-desc {
@@ -663,6 +668,7 @@
       font-weight: 300;
       color: #999;
       line-height: 1.5;
+      min-height: 33px;
     }
 
     .bento-cell {
@@ -776,12 +782,12 @@
           </div>
         </div>
         <div class="bento-hero-quotes">
-          <div class="bento-hero-globe">
-            <canvas id="globe-canvas-light" width="400" height="400"></canvas>
-          </div>
           <div class="bento-quotes">
             <div class="bento-quote">"I just see things, say things, run things, and it mostly works."<br><span>— Andrej Karpathy</span></div>
             <div class="bento-quote">"The line between designer and builder is gone. Those who thrive will be the ones who can move fluidly between both worlds."<br><span>— Stu Green</span></div>
+          </div>
+          <div class="bento-hero-globe">
+            <canvas id="globe-canvas-light" width="400" height="400"></canvas>
           </div>
         </div>
       </div>
@@ -1160,9 +1166,9 @@
       }
     }
 
-    function drawTiltedGlobe(ctx, W, H, R, angle, tilt) {
+    function drawTiltedGlobe(ctx, W, H, R, angle, tilt, skipClear) {
       const cx = W/2, cy = H/2;
-      ctx.clearRect(0, 0, W, H);
+      if (!skipClear) ctx.clearRect(0, 0, W, H);
       const ct = Math.cos(tilt), st = Math.sin(tilt);
       // Outer circle
       ctx.strokeStyle = "#000";
@@ -1209,16 +1215,12 @@
       if (lightGlobeRunning) return;
       lightGlobeRunning = true;
 
-      const heroC = document.getElementById("globe-canvas-hero");
       const cellC = document.getElementById("globe-canvas-light");
+      if (cellC) cellC.style.transform = 'rotate(20deg)';
       let angle = 0;
 
       function draw() {
         if (isDark) { lightGlobeRunning = false; return; }
-        if (heroC) {
-          const ctx = heroC.getContext('2d');
-          drawTiltedGlobe(ctx, heroC.width, heroC.height, heroC.width * 0.4, angle, 0.4);
-        }
         if (cellC) {
           const ctx = cellC.getContext('2d');
           drawGlobe(ctx, cellC.width, cellC.height, cellC.width * 0.45, angle);
@@ -1525,6 +1527,61 @@
 
       animate();
     })();
+
+    // ── Code-to-quote hover effect ──
+    // Default: actual quote. Hover: instantly show code, then decrypt into quote.
+    const codeChars = '{}[]()<>=/+*&|;:$#!?~%^_01\\';
+
+    function setupQuoteToCode(textNode, triggerEl) {
+      const quote = textNode.textContent;
+      if (!quote.trim()) return;
+      const len = quote.length;
+      let rafId = null;
+
+      triggerEl.addEventListener('mouseenter', () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        // Instantly show code
+        textNode.textContent = quote.split('').map(c =>
+          c === ' ' ? ' ' : codeChars[Math.floor(Math.random() * codeChars.length)]
+        ).join('');
+        // Then decrypt into quote
+        let revealed = 0;
+        function step() {
+          revealed = Math.min(revealed + 3, len);
+          let out = '';
+          for (let i = 0; i < len; i++) {
+            if (i < revealed) {
+              out += quote[i];
+            } else if (quote[i] === ' ') {
+              out += ' ';
+            } else {
+              out += codeChars[Math.floor(Math.random() * codeChars.length)];
+            }
+          }
+          textNode.textContent = out;
+          if (revealed < len) rafId = requestAnimationFrame(step);
+          else { textNode.textContent = quote; rafId = null; }
+        }
+        rafId = requestAnimationFrame(step);
+      });
+
+      triggerEl.addEventListener('mouseleave', () => {
+        if (rafId) cancelAnimationFrame(rafId);
+        rafId = null;
+        textNode.textContent = quote;
+      });
+    }
+
+    // Light mode bento quotes
+    document.querySelectorAll('.bento-quote').forEach(el => {
+      const textNode = el.childNodes[0];
+      if (textNode && textNode.nodeType === 3) setupQuoteToCode(textNode, el);
+    });
+
+    // Dark mode quote cards
+    document.querySelectorAll('.quote-card blockquote').forEach(el => {
+      setupQuoteToCode(el, el.parentElement);
+    });
   </script>
 
   <script type="module">
