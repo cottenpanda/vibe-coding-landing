@@ -493,6 +493,23 @@
     .modal-body .do-yes li::before { content: '→'; position: absolute; left: 0; color: #444; }
     .modal-body .do-no li::before { content: '×'; position: absolute; left: 0; color: #444; }
 
+    /* ── Bento card stagger animation ── */
+    @keyframes bentoCardIn {
+      0% { opacity: 0; transform: translateY(24px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    .bento-cell.stagger-hidden { opacity: 0; }
+
+    .bento-cell.stagger-in {
+      animation: bentoCardIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .bento-cell.stagger-in:nth-child(1) { animation-delay: 0s; }
+    .bento-cell.stagger-in:nth-child(2) { animation-delay: 0.08s; }
+    .bento-cell.stagger-in:nth-child(3) { animation-delay: 0.16s; }
+    .bento-cell.stagger-in:nth-child(4) { animation-delay: 0.24s; }
+    .bento-cell.stagger-in:nth-child(5) { animation-delay: 0.32s; }
+
     /* ── Mode transition: dissolve ── */
 
     /* ── Splash cursor (dark mode) ── */
@@ -502,10 +519,11 @@
       width: 100vw; height: 100vh;
       z-index: 9;
       pointer-events: none;
-      display: block;
+      opacity: 1;
+      transition: opacity 0.3s;
     }
 
-    body.light-mode #splashCursor { display: none; }
+    body.light-mode #splashCursor { opacity: 0; }
 
     /* ── Cursor: crosshair (light mode) ── */
     body.light-mode, body.light-mode * {
@@ -1156,7 +1174,7 @@
       document.body.classList.toggle("light-mode", !isDark);
       modeToggle.textContent = isDark ? "Light Mode" : "Dark Mode";
       modeToggleLight.textContent = isDark ? "Light Mode" : "Dark Mode";
-      if (!isDark) { startLightGlobe(); startBentoAnims(); }
+      if (!isDark) { startLightGlobe(); startBentoAnims(); triggerBentoStagger(); }
     }
 
     modeToggle.addEventListener("click", toggleMode);
@@ -1262,7 +1280,7 @@
           const ctx = cellC.getContext('2d');
           drawGlobe(ctx, cellC.width, cellC.height, cellC.width * 0.45, angle);
         }
-        angle += 0.15;
+        angle += window._globeHover ? 0.8 : 0.15;
         requestAnimationFrame(draw);
       }
       draw();
@@ -1563,6 +1581,95 @@
       }
 
       animate();
+    })();
+
+    // ── Typing intro for "VIBE CODING" ──
+    (function typingIntro() {
+      const hubH1 = document.querySelector('#hub h1');
+      if (!hubH1) return;
+      const fullText = hubH1.textContent;
+      hubH1.textContent = '';
+
+      const cursor = document.createElement('span');
+      cursor.style.cssText = 'animation: cursorBlink 0.6s step-end infinite; font-weight: 200;';
+      cursor.textContent = '|';
+      hubH1.appendChild(cursor);
+
+      const s = document.createElement('style');
+      s.textContent = '@keyframes cursorBlink{0%,100%{opacity:1}50%{opacity:0}}';
+      document.head.appendChild(s);
+
+      let i = 0;
+      function typeNext() {
+        if (i < fullText.length) {
+          cursor.before(fullText[i]);
+          i++;
+          setTimeout(typeNext, 100);
+        } else {
+          let blinks = 0;
+          const iv = setInterval(() => { if (++blinks >= 5) { clearInterval(iv); cursor.remove(); } }, 600);
+        }
+      }
+      setTimeout(typeNext, 400);
+    })();
+
+    // ── Mouse parallax on dark mode ──
+    (function mouseParallax() {
+      const parallaxEls = [
+        ...document.querySelectorAll('.topic'),
+        document.getElementById('quoteCard'),
+        document.getElementById('quoteCard2'),
+        document.getElementById('hub')
+      ].filter(Boolean);
+
+      const maxShift = 6;
+
+      window.addEventListener('mousemove', (e) => {
+        if (!isDark) { parallaxEls.forEach(el => { el.style.transform = ''; }); return; }
+        if (dragTarget) return;
+
+        const cx = window.innerWidth / 2;
+        const cy = window.innerHeight / 2;
+        const rx = (e.clientX - cx) / cx;
+        const ry = (e.clientY - cy) / cy;
+
+        parallaxEls.forEach(el => {
+          if (el.style.transform === 'none') return;
+          const r = el.getBoundingClientRect();
+          const dx = (r.left + r.width / 2 - cx) / cx;
+          const dy = (r.top + r.height / 2 - cy) / cy;
+          const factor = 0.5 + Math.sqrt(dx * dx + dy * dy) * 0.8;
+          const tx = rx * maxShift * factor;
+          const ty = ry * maxShift * factor;
+
+          if (el.id === 'hub') {
+            el.style.transform = 'translate(calc(-50% + ' + tx + 'px), calc(-50% + ' + ty + 'px))';
+          } else {
+            el.style.transform = 'translate(' + tx + 'px, ' + ty + 'px)';
+          }
+        });
+        updateLines();
+      });
+    })();
+
+    // ── Bento card stagger trigger ──
+    function triggerBentoStagger() {
+      const cells = document.querySelectorAll('.bento-row-2 .bento-cell');
+      // Hide all cards first
+      cells.forEach(c => { c.classList.remove('stagger-in'); c.style.opacity = '0'; });
+      // Wait for layout to be visible, then stagger in
+      setTimeout(() => {
+        cells.forEach(c => { c.style.opacity = ''; c.classList.add('stagger-in'); });
+      }, 550); // after dissolve transition (500ms) completes
+    }
+
+    // ── Globe hover-to-spin-faster ──
+    (function setupGlobeHover() {
+      const container = document.querySelector('.bento-hero-globe');
+      if (!container) return;
+      window._globeHover = false;
+      container.addEventListener('mouseenter', () => { window._globeHover = true; });
+      container.addEventListener('mouseleave', () => { window._globeHover = false; });
     })();
 
     // ── Code-to-quote hover effect ──
