@@ -402,7 +402,10 @@
       z-index: 1;
       max-height: 80vh;
       overflow-y: auto;
+      scrollbar-width: none;
     }
+
+    .modal-inner::-webkit-scrollbar { display: none; }
 
     .modal-header {
       padding: 32px 32px 24px;
@@ -436,6 +439,7 @@
     .modal-close {
       position: absolute;
       top: 20px; right: 20px;
+      z-index: 2;
       background: rgba(255, 255, 255, 0.05);
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 50%;
@@ -719,10 +723,11 @@
 
     .bento-cell-desc {
       font-size: 11px;
-      font-weight: 300;
+      font-weight: 400;
       color: #999;
       line-height: 1.5;
       min-height: 33px;
+      max-width: 180px;
     }
 
     .bento-cell {
@@ -806,11 +811,11 @@
       <a href="https://x.com/karpathy/status/1886192184808149383" target="_blank" class="quote-link">Read original post &rarr;</a>
     </div>
 
-    <div class="topic" id="t1" data-panel="0"><div class="topic-num">01</div><div class="topic-name">Getting Started</div><div class="topic-desc">Open the AI, describe what you want, press enter.</div></div>
-    <div class="topic" id="t2" data-panel="1"><div class="topic-num">02</div><div class="topic-name">How to Prompt</div><div class="topic-desc">Describe feelings, not code.</div></div>
-    <div class="topic" id="t3" data-panel="2"><div class="topic-num">03</div><div class="topic-name">The Workflow</div><div class="topic-desc">Describe, generate, react, refine.</div></div>
-    <div class="topic" id="t4" data-panel="3"><div class="topic-num">04</div><div class="topic-name">Lessons the Hard Way</div><div class="topic-desc">Iterate small, push back, start ugly.</div></div>
-    <div class="topic" id="t5" data-panel="4"><div class="topic-num">05</div><div class="topic-name">Your Toolkit</div><div class="topic-desc">Claude Code, Cursor, v0, Bolt, Figma.</div></div>
+    <div class="topic" id="t1" data-panel="0"><div class="topic-num">01</div><div class="topic-name">Getting Started</div><div class="topic-desc">Open an AI tool. Describe what you want. Run it.</div></div>
+    <div class="topic" id="t2" data-panel="1"><div class="topic-num">02</div><div class="topic-name">How to Prompt</div><div class="topic-desc">Describe what it should do, not how to code it.</div></div>
+    <div class="topic" id="t3" data-panel="2"><div class="topic-num">03</div><div class="topic-name">The Workflow</div><div class="topic-desc">Describe, generate, adjust, repeat.</div></div>
+    <div class="topic" id="t4" data-panel="3"><div class="topic-num">04</div><div class="topic-name">Lessons the Hard Way</div><div class="topic-desc">Start small. Expect mess. Improve as you go.</div></div>
+    <div class="topic" id="t5" data-panel="4"><div class="topic-num">05</div><div class="topic-name">Your Toolkit</div><div class="topic-desc">Build, edit, and see your ideas.</div></div>
 
     <div class="quote-card" id="quoteCard2">
       <blockquote>"The line between designer and builder is gone. Those who thrive will be the ones who can move fluidly between both worlds."</blockquote>
@@ -850,27 +855,27 @@
         <div class="bento-cell" data-panel="0">
           <div class="bento-cell-num">01</div>
           <div class="bento-cell-name">Getting Started</div>
-          <div class="bento-cell-desc">Open the AI, describe what you want, press enter.</div>
+          <div class="bento-cell-desc">Open an AI tool. Describe what you want. Run it.</div>
         </div>
         <div class="bento-cell" data-panel="1">
           <div class="bento-cell-num">02</div>
           <div class="bento-cell-name">How to Prompt</div>
-          <div class="bento-cell-desc">Describe feelings, not code.</div>
+          <div class="bento-cell-desc">Describe what it should do, not how to code it.</div>
         </div>
         <div class="bento-cell" data-panel="2">
           <div class="bento-cell-num">03</div>
           <div class="bento-cell-name">The Workflow</div>
-          <div class="bento-cell-desc">Describe, generate, react, refine.</div>
+          <div class="bento-cell-desc">Describe, generate, adjust, repeat.</div>
         </div>
         <div class="bento-cell" data-panel="3">
           <div class="bento-cell-num">04</div>
           <div class="bento-cell-name">Lessons the Hard Way</div>
-          <div class="bento-cell-desc">Iterate small, push back, start ugly.</div>
+          <div class="bento-cell-desc">Start small. Expect mess. Improve as you go.</div>
         </div>
         <div class="bento-cell" data-panel="4">
           <div class="bento-cell-num">05</div>
           <div class="bento-cell-name">Your Toolkit</div>
-          <div class="bento-cell-desc">Claude Code, Cursor, v0, Bolt, Figma.</div>
+          <div class="bento-cell-desc">Build, edit, and see your ideas.</div>
         </div>
       </div>
     </div>
@@ -878,9 +883,9 @@
 
   <div class="modal-backdrop" id="modalBackdrop"></div>
   <div class="modal" id="modal">
+    <button class="modal-close" id="modalClose">&times;</button>
     <div class="modal-inner">
       <div class="modal-header">
-        <button class="modal-close" id="modalClose">&times;</button>
         <div class="modal-num" id="modalNum"></div>
         <div class="modal-title" id="modalTitle"></div>
         <div class="modal-intro" id="modalIntro"></div>
@@ -891,11 +896,13 @@
 
   <script>
     const data = [
-      { num: "01", title: "Getting Started", intro: "You don't need to learn a programming language. Open an AI tool, describe what you want, and press enter.",
-        body: `<div class="rule"><h3>Just start talking</h3><p>Open Claude Code or Cursor. Type: "Build me a landing page with a big headline and a signup form." The AI creates files, writes code, and you see it in your browser.</p></div>
-          <div class="rule"><h3>Your design eye is the skill</h3><p>Engineers think in logic. You think in layout, hierarchy, whitespace, rhythm. The AI handles logic. You handle taste.</p></div>
-          <div class="rule quote"><blockquote>I just see things, say things, run things, and it mostly works.</blockquote><cite>Andrej Karpathy</cite></div>
-          <div class="rule"><h3>Three tools is all you need</h3><p>Claude Code for building, your browser for seeing, Figma for designing the vision.</p></div>` },
+      { num: "01", title: "Getting Started", intro: "You don't need to learn a programming language. You already have ideas — that's enough. Vibe coding is just turning your ideas into something real, step by step. If you can describe what you want, you can start.",
+        body: `<div class="rule"><h3>1. Start with your idea</h3><p>Think of something simple you want to make:</p><ul class="do-yes"><li>A landing page</li><li>A small tool</li><li>A fun interaction</li></ul><p>Then say it directly:</p><p>"Build a simple page with a headline and a button"</p><p>"Create a page where elements move when I scroll"</p><p>You're not writing code. You're describing what you want.</p></div>
+          <div class="rule"><h3>2. Let AI turn it into something</h3><p>Don't overthink it. The AI will generate code and a working result.</p><p>You don't need to understand how it works. Just focus on:</p><ul class="do-yes"><li>What it made</li><li>How close it is to your idea</li><li>Is this what you expect</li></ul></div>
+          <div class="rule"><h3>3. Move it closer to your idea</h3><p>Now guide it. Not everything at once — just one step:</p><p>"Make it simpler"</p><p>"Add a second section"</p><p>"Slow down the movement"</p><p>Each prompt moves it closer to what you imagined.</p></div>
+          <div class="rule"><h3>4. You guide, AI builds</h3><p>You don't need technical skills. Your role is to:</p><ul class="do-yes"><li>Decide what you want</li><li>Notice what's off</li><li>Say what to change</li></ul><p>The AI handles the building.</p></div>
+          <div class="rule"><h3>5. You don't need a perfect plan</h3><p>Your idea doesn't have to be clear from the start. Start rough. Adjust as you go. Most things become clear after you see them.</p></div>
+          <div class="rule"><h3>6. Keep it small</h3><p>Don't try to build everything at once. Start with:</p><ul class="do-yes"><li>One idea</li><li>One page</li><li>One interaction</li></ul><p>Then grow it.</p></div>` },
       { num: "02", title: "How to Prompt", intro: "Vibe coding isn't about writing perfect prompts. It's about thinking clearly enough that AI can build with you.",
         body: `<div class="rule"><h3>1. Start messy, not perfect</h3><p>Don't overthink the first prompt. Say what you want like you're explaining to a teammate:</p><p>"Create a floating UI where elements fall when I scroll and rise when I scroll up. Keep it soft, minimal, pastel."</p><p>Then iterate.</p></div>
           <div class="rule"><h3>2. Describe behavior, not just visuals</h3><div class="do-section"><div class="do-label">Bad</div><ul class="do-no"><li>"Make it look cool"</li></ul></div><div class="do-section"><div class="do-label">Better</div><ul class="do-yes"><li>"Elements should move slower in the background and faster in the foreground to create depth."</li></ul></div><p>Focus on: movement, interaction, state changes.</p></div>
@@ -905,18 +912,19 @@
           <div class="rule"><h3>6. Say what you don't want</h3><p>Super underrated.</p><p>"Avoid sharp movement. No harsh black. Keep it calm."</p></div>
           <div class="rule"><h3>7. Ask AI to simplify</h3><p>When things get messy:</p><p>"Simplify this. Reduce complexity but keep the core interaction."</p></div>
           <div class="rule"><h3>8. Treat AI like a builder, not a tool</h3><div class="do-section"><div class="do-label">Not</div><ul class="do-no"><li>"Generate code"</li></ul></div><div class="do-section"><div class="do-label">But</div><ul class="do-yes"><li>"Help me explore this idea"</li></ul></div></div>` },
-      { num: "03", title: "The Workflow", intro: "A tight loop: describe, see, react, refine. 3–5 iterations is normal.",
-        body: `<div class="rule"><h3>Describe</h3><p>Write what you want like a design brief. Include the feeling, the audience, and references.</p></div>
-          <div class="rule"><h3>Generate</h3><p>The AI writes real, runnable code. See the result immediately.</p></div>
-          <div class="rule"><h3>React</h3><p>Look at it like a design review. What's off? Trust your gut.</p></div>
-          <div class="rule"><h3>Refine</h3><p>"Tighter." "Lighter." "More breathing room." Repeat.</p></div>
-          <div class="rule quote"><blockquote>The feedback loop went from days to seconds.</blockquote><cite>Why this works</cite></div>` },
-      { num: "04", title: "Lessons the Hard Way", intro: "Things I wish someone told me before I started.",
-        body: `<div class="rule"><h3>One thing at a time</h3><p>Don't ask for 10 changes in one prompt. Ask for one. Review. Then the next.</p></div>
-          <div class="rule"><h3>Don't accept the first output</h3><p>The first result is a draft. Push back. That's the gap between good and great.</p></div>
-          <div class="rule"><h3>Start ugly, end beautiful</h3><p>Get structure right first. If it's bad in black and white, color won't save it.</p></div>
-          <div class="rule"><h3>Describe what you see</h3><p>"This feels unbalanced" beats "move that div left 20px."</p></div>
-          <div class="rule quote"><blockquote>Delete it and try again. Generated code is free.</blockquote><cite>The best lesson</cite></div>` },
+      { num: "03", title: "The Workflow", intro: "Once you start, this is how things actually get built. Not in one step, but through small loops. A simple loop you repeat a few times: describe, generate, adjust, repeat. 3-5 rounds is normal.",
+        body: `<div class="rule"><h3>1. Describe</h3><p>Write what you want like a short brief:</p><ul class="do-yes"><li>What it should do</li><li>How it should feel</li><li>Any references (optional)</li></ul><p>"Create a simple page where elements move when I scroll. Keep it calm and minimal."</p><p>You don't need perfect wording. Just say what you mean.</p></div>
+          <div class="rule"><h3>2. Generate</h3><p>Let the AI build it. It creates real, working code and shows you the result right away.</p><p>The first version won't be perfect. That's expected.</p></div>
+          <div class="rule"><h3>3. Adjust</h3><p>Look at what you got and decide what to change:</p><ul class="do-yes"><li>What feels off?</li><li>What's missing?</li><li>What's too much?</li></ul><p>Then say it clearly:</p><p>"Make it simpler"</p><p>"Add more space"</p><p>"Slow this down"</p><p>Focus on one change at a time.</p></div>
+          <div class="rule"><h3>4. Repeat</h3><p>Run it again. Look again. Adjust again. Each loop gets you closer.</p></div>
+          <div class="rule"><h3>Keep it simple</h3><p>Don't try to get everything right in one go. Most progress comes from:</p><ul class="do-yes"><li>Small changes</li><li>Quick feedback</li><li>Repeating the loop</li></ul></div>` },
+      { num: "04", title: "Lessons the Hard Way", intro: "Things people usually learn after getting stuck.",
+        body: `<div class="rule"><h3>1. Ask for a plan</h3><p>Before making changes, ask AI to explain what it's going to do.</p><p>"Give me a plan first. What are you going to build and how?"</p><p>"Walk me through the steps before you start coding."</p><p>This helps you:</p><ul class="do-yes"><li>Understand the direction</li><li>Catch issues early</li><li>Avoid unnecessary changes</li></ul><p>It's much easier to guide when you can see the plan.</p></div>
+          <div class="rule"><h3>2. Keep it simple and focused</h3><p><strong>Be clear and specific</strong></p><p>AI doesn't have an eye. Instead of:</p><ul class="do-no"><li>"Move this to the top right"</li></ul><p>Say:</p><ul class="do-yes"><li>"Move the download button to the top right of the screen"</li></ul><p>Being specific about what helps avoid confusion.</p><p><strong>Providing more detail doesn't always mean better</strong></p><p>Long prompts don't guarantee better results. Clear > long.</p><p>"Add a simple second section below this" is often better than a paragraph of instructions.</p><p><strong>Asking for too much at once doesn't work</strong></p><p>Big requests often lead to:</p><ul class="do-no"><li>Messy results</li><li>Things breaking</li><li>Hard-to-fix code</li></ul><p>Start smaller. Build step by step.</p><p><strong>Don't try to fix everything at once</strong></p><p>If too many things change, it becomes confusing. Slow down. One change at a time.</p></div>
+          <div class="rule"><h3>4. Use your own judgment</h3><p>AI will generate something, but it doesn't always understand your intent. Sometimes it:</p><ul class="do-no"><li>Misunderstands</li><li>Adds extra things</li><li>Changes something that was working</li></ul><p>That's normal. Your role is to decide what's right. Don't follow blindly.</p><ul class="do-yes"><li>Keep what works</li><li>Remove what doesn't</li><li>Guide it back</li></ul></div>
+          <div class="rule"><h3>5. Show it (screenshots + references)</h3><p>If something looks wrong, show it.</p><ul class="do-yes"><li>Take a screenshot</li><li>Or share a reference image</li></ul><p>AI can understand images and give better suggestions.</p><p>"Here's a screenshot. The spacing feels too tight."</p><p>"Make it feel like this reference, but simpler."</p><p>This is often easier than explaining everything in words.</p></div>
+          <div class="rule"><h3>6. Ask AI to explain and learn from it</h3><p>You don't need to understand everything right away. Focus on:</p><ul class="do-yes"><li>What it does</li><li>What you want to change</li></ul><p>When something works, ask:</p><p>"Explain what you changed"</p><p>Use it to learn as you go. Understanding builds over time — you don't need it before you start.</p></div>
+          <div class="rule"><h3>7. When it gets messy, simplify or reset</h3><p>Things can get confusing after a few changes. That's normal.</p><p>If it starts to feel out of control:</p><ul class="do-yes"><li>Go back to a simpler version</li><li>Or restart with a smaller idea</li></ul><p>You're not stuck. It's often faster to simplify than to keep fixing something messy.</p></div>` },
       { num: "05", title: "Your Toolkit", intro: "Start with one tool. Add more only when you hit a wall.",
         body: `<div class="rule"><h3>Claude Code</h3><p>Describe what you want in conversation, it builds the whole thing.</p></div>
           <div class="rule"><h3>Cursor</h3><p>A code editor with AI built in. See the files, AI edits inline.</p></div>
