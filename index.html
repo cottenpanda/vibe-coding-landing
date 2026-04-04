@@ -375,7 +375,7 @@
       position: fixed;
       top: 50%; left: 50%;
       transform: translate(-50%, -50%) scale(0.92);
-      width: 540px;
+      width: 640px;
       max-height: 80vh;
       background: rgba(20, 20, 20, 0.8);
       backdrop-filter: blur(40px);
@@ -496,6 +496,41 @@
     .modal-body li { font-size: 14px; font-weight: 400; line-height: 1.8; padding-left: 18px; position: relative; color: #aaa; }
     .modal-body .do-yes li::before { content: '→'; position: absolute; left: 0; color: #444; }
     .modal-body .do-no li::before { content: '×'; position: absolute; left: 0; color: #444; }
+
+    .modal-body table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 8px 0;
+    }
+
+    .modal-body th {
+      text-align: left;
+      font-family: 'Space Mono', monospace;
+      font-size: 9px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #555;
+      padding: 8px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-body td {
+      padding: 10px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #aaa;
+      font-size: 13px;
+      line-height: 1.5;
+      vertical-align: top;
+    }
+
+    .modal-body td:first-child {
+      color: #fff;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .modal-body tr:last-child td { border-bottom: none; }
 
     /* ── Bento card stagger animation ── */
     @keyframes bentoCardIn {
@@ -925,13 +960,26 @@
           <div class="rule"><h3>5. Show it (screenshots + references)</h3><p>If something looks wrong, show it.</p><ul class="do-yes"><li>Take a screenshot</li><li>Or share a reference image</li></ul><p>AI can understand images and give better suggestions.</p><p>"Here's a screenshot. The spacing feels too tight."</p><p>"Make it feel like this reference, but simpler."</p><p>This is often easier than explaining everything in words.</p></div>
           <div class="rule"><h3>6. Ask AI to explain and learn from it</h3><p>You don't need to understand everything right away. Focus on:</p><ul class="do-yes"><li>What it does</li><li>What you want to change</li></ul><p>When something works, ask:</p><p>"Explain what you changed"</p><p>Use it to learn as you go. Understanding builds over time — you don't need it before you start.</p></div>
           <div class="rule"><h3>7. When it gets messy, simplify or reset</h3><p>Things can get confusing after a few changes. That's normal.</p><p>If it starts to feel out of control:</p><ul class="do-yes"><li>Go back to a simpler version</li><li>Or restart with a smaller idea</li></ul><p>You're not stuck. It's often faster to simplify than to keep fixing something messy.</p></div>` },
-      { num: "05", title: "Your Toolkit", intro: "Start with one tool. Add more only when you hit a wall.",
-        body: `<div class="rule"><h3>Claude Code</h3><p>Describe what you want in conversation, it builds the whole thing.</p></div>
-          <div class="rule"><h3>Cursor</h3><p>A code editor with AI built in. See the files, AI edits inline.</p></div>
-          <div class="rule"><h3>v0 by Vercel</h3><p>Type a description, get a component. Fastest way to prototype.</p></div>
-          <div class="rule"><h3>Bolt</h3><p>Full-stack apps from a prompt. When your ambition grows.</p></div>
-          <div class="rule"><h3>Figma + Browser</h3><p>Design in Figma, describe to AI. Inspect helps you give better feedback.</p></div>
-          <div class="rule quote"><blockquote>Start with one tool. Add more only when you hit a wall.</blockquote><cite>Keep it simple</cite></div>` }
+      { num: "05", title: "Your Toolkit", intro: "You don't need all of them. Start with one tool that fits how you think. Add more only when you hit a wall.",
+        body: `<div class="rule"><table>
+          <tr><th>Tool</th><th>What it is</th><th>Interface</th><th>Easy to use</th></tr>
+          <tr><td>v0 by Vercel</td><td>AI tool that generates UI from text prompts</td><td>Web interface with live preview</td><td>Very easy</td></tr>
+          <tr><td>Replit</td><td>Online coding environment with built-in AI to build and run apps</td><td>Browser-based editor + chat</td><td>Very easy</td></tr>
+          <tr><td>Figma Make</td><td>AI tool inside Figma to turn ideas into UI and apps</td><td>Design tool + chat interface</td><td>Easy</td></tr>
+          <tr><td>Lovable</td><td>AI app builder for creating full apps from prompts</td><td>Web app with prompt input</td><td>Easy</td></tr>
+          <tr><td>Google AI Studio</td><td>Tool for experimenting with AI prompts and ideas</td><td>Browser-based playground</td><td>Medium</td></tr>
+          <tr><td>Cursor</td><td>Code editor with built-in AI to edit and generate code</td><td>Code editor (like VS Code)</td><td>Medium</td></tr>
+          <tr><td>Claude Code</td><td>AI coding assistant that builds from your prompts</td><td>Terminal or chat-style interface</td><td>Medium</td></tr>
+          </table></div>
+          <div class="rule"><h3>Quick way to choose</h3>
+          <ul class="do-yes">
+          <li>Want the easiest start &rarr; <strong>v0</strong> or <strong>Replit</strong></li>
+          <li>Want visual thinking &rarr; <strong>Figma Make</strong></li>
+          <li>Want guided app building &rarr; <strong>Lovable</strong></li>
+          <li>Want to explore ideas &rarr; <strong>AI Studio</strong></li>
+          <li>Want more control &rarr; <strong>Cursor</strong></li>
+          <li>Want more power &rarr; <strong>Claude Code</strong></li>
+          </ul></div>` }
     ];
 
     // ── Elements ──
