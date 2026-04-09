@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  <rect width="32" height="32" rx="6" fill="#0d0c0c"/>
+  <g filter="url(#glow)" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <!-- < -->
+    <polyline points="7,10 3,16 7,22"/>
+    <!-- / -->
+    <line x1="18" y1="8" x2="14" y2="24"/>
+    <!-- > -->
+    <polyline points="25,10 29,16 25,22"/>
+  </g>
+</svg>
